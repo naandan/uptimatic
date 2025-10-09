@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Your Email</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f9f9f9; }
+        .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; text-align: center; }
+        h1 { color: #333; }
+        a.button { background-color: #4CAF50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        p { font-size: 16px; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Verify Your Email</h1>
+        <p>Hi {{.Name}}, thanks for signing up!</p>
+        <p>Please verify your email address by clicking the button below:</p>
+        <p><a href="{{.VerificationLink}}" class="button">Verify Email</a></p>
+        <p>If you didn't create an account, you can safely ignore this email.</p>
+    </div>
+</body>
+</html>

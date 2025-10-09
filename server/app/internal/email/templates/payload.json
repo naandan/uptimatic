@@ -1,0 +1,20 @@
+{
+    "welcome":{
+        "to": "user@example.com",
+        "subject": "Welcome to Our App!",
+        "type": "welcome",
+        "data": {
+            "Name": "Nandan",
+            "Link": "https://example.com/start"
+        }
+    },
+    "verify":{
+        "to": "user@example.com",
+        "subject": "Please Verify Your Email",
+        "type": "verify",
+        "data": {
+            "Name": "Nandan",
+            "VerificationLink": "https://example.com/verify?token=abc123xyz"
+        }
+    }
+}
