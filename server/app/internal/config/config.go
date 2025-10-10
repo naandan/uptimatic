@@ -63,7 +63,7 @@ func LoadConfig() (Config, error) {
 		DBHost:     viper.GetString("DB_HOST"),
 		DBPort:     viper.GetInt("DB_PORT"),
 		DBUser:     viper.GetString("DB_USER"),
-		DBPassword: viper.GetString("DB_PASSWORD"),
+		DBPassword: viper.GetString("DB_PASS"),
 		DBName:     viper.GetString("DB_NAME"),
 
 		RedisHost: viper.GetString("REDIS_HOST"),
