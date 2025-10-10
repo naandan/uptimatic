@@ -3,9 +3,12 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
+	"uptimatic/internal/email"
 	"uptimatic/internal/models"
 	"uptimatic/internal/repositories"
+	"uptimatic/internal/tasks"
 	"uptimatic/internal/utils"
 
 	"github.com/go-redis/redis/v8"
@@ -21,6 +24,7 @@ type AuthService interface {
 	Refresh(refreshToken string) (string, string, error)
 	VerifyEmail(token string) error
 	ResendVerificationEmail(email string, appUrl string) error
+	Profile(userId uint) (*models.User, error)
 }
 
 type authService struct {
@@ -47,13 +51,13 @@ func (s *authService) Register(userEmail, password string, appUrl string) (*mode
 		return nil, err
 	}
 
-	// token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	// link := fmt.Sprintf("%s/api/v1/auth/verify-email?token=%s", appUrl, token)
-	// tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Cartel", email.EmailVerify, map[string]any{"Name": name, "VerificationLink": link})
+	link := fmt.Sprintf("%s/api/v1/auth/verify?token=%s", appUrl, token)
+	tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"Name": userEmail, "VerificationLink": link})
 	return user, nil
 }
 
@@ -72,15 +76,6 @@ func (s *authService) Login(email, password string) (string, string, error) {
 		return "", "", err
 	}
 
-	// rt := &models.RefreshToken{
-	// 	UserID:    user.ID,
-	// 	Token:     refresh,
-	// 	ExpiresAt: time.Now().Add(s.jwtUtil.RefreshTTL),
-	// }
-	// if err := s.refreshRepo.Save(rt); err != nil {
-	// 	return "", "", err
-	// }
-
 	if err := s.redis.Set(context.Background(), utils.GetRefreshTokenKey(refresh), user.ID, s.jwtUtil.RefreshTTL).Err(); err != nil {
 		return "", "", err
 	}
@@ -93,11 +88,6 @@ func (s *authService) Logout(refreshToken string) error {
 }
 
 func (s *authService) Refresh(oldRefresh string) (string, string, error) {
-	// rt, err := s.refreshRepo.FindValid(oldRefresh)
-	// if err != nil {
-	// 	return "", "", err
-	// }
-
 	id, err := s.redis.Get(context.Background(), utils.GetRefreshTokenKey(oldRefresh)).Result()
 	if err != nil {
 		return "", "", errors.New("unauthorized")
@@ -121,15 +111,6 @@ func (s *authService) Refresh(oldRefresh string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-
-	// newRT := &models.RefreshToken{
-	// 	UserID:    rt.UserID,
-	// 	Token:     refresh,
-	// 	ExpiresAt: time.Now().Add(s.jwtUtil.RefreshTTL),
-	// }
-	// if err := s.refreshRepo.Save(newRT); err != nil {
-	// 	return "", "", err
-	// }
 
 	if err := s.redis.Set(context.Background(), utils.GetRefreshTokenKey(refresh), user.ID, s.jwtUtil.RefreshTTL).Err(); err != nil {
 		return "", "", err
@@ -176,12 +157,16 @@ func (s *authService) ResendVerificationEmail(userEmail string, appUrl string) e
 		return errors.New("email already verified")
 	}
 
-	// token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
-	// if err != nil {
-	// 	return err
-	// }
+	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
+	if err != nil {
+		return err
+	}
 
-	// link := fmt.Sprintf("%s/api/v1/auth/verify-email?token=%s", appUrl, token)
-	// tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Cartel", email.EmailVerify, map[string]any{"Name": user.Name, "VerificationLink": link})
+	link := fmt.Sprintf("%s/api/v1/auth/verify?token=%s", appUrl, token)
+	tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"Name": user.Email, "VerificationLink": link})
 	return nil
+}
+
+func (s *authService) Profile(userId uint) (*models.User, error) {
+	return s.userRepo.FindByID(s.db, userId)
 }

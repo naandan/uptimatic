@@ -20,10 +20,8 @@ type EmailTask struct {
 type EmailType string
 
 const (
-	EmailWelcome     EmailType = "welcome"
-	EmailTransaction EmailType = "transaction"
-	EmailPromo       EmailType = "promo"
-	EmailVerify      EmailType = "verify"
+	EmailWelcome EmailType = "welcome"
+	EmailVerify  EmailType = "verify"
 )
 
 type EmailPayload struct {
@@ -36,7 +34,7 @@ type EmailPayload struct {
 func NewEmailTask(cfg *config.Config) (*EmailTask, error) {
 	t := &EmailTask{cfg: cfg, tplCache: map[EmailType]*template.Template{}}
 
-	types := []EmailType{EmailWelcome, EmailTransaction, EmailPromo, EmailVerify}
+	types := []EmailType{EmailWelcome, EmailVerify}
 	for _, typ := range types {
 		tpl, err := template.ParseFiles(fmt.Sprintf("internal/email/templates/%s.html", typ))
 		if err != nil {

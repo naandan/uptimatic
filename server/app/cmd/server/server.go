@@ -48,7 +48,7 @@ func Start() {
 
 	api := r.Group("/api/v1")
 	{
-		routes.AuthRoutes(api, authHandler)
+		routes.AuthRoutes(api, authHandler, &jwtUtil)
 	}
 
 	addr := ":" + fmt.Sprint(cfg.AppPort)

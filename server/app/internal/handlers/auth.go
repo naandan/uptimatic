@@ -16,6 +16,9 @@ type AuthHandler interface {
 	LoginHandler(c *gin.Context)
 	LogoutHandler(c *gin.Context)
 	RefreshHandler(c *gin.Context)
+	VerifyHandler(c *gin.Context)
+	ResendVerificationHandler(c *gin.Context)
+	ProfileHandler(c *gin.Context)
 }
 
 type authHandler struct {
@@ -41,7 +44,7 @@ func (h *authHandler) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(req.Email, req.Password, "")
+	user, err := h.authService.Register(req.Email, req.Password, h.cfg.AppDomain)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -117,4 +120,55 @@ func (h *authHandler) RefreshHandler(c *gin.Context) {
 		"access_token":  access,
 		"refresh_token": refresh,
 	})
+}
+
+func (h *authHandler) VerifyHandler(c *gin.Context) {
+	token := c.Query("token")
+	if err := h.authService.VerifyEmail(token); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		return
+	}
+	utils.SuccessResponse(c, nil)
+}
+
+func (h *authHandler) ResendVerificationHandler(c *gin.Context) {
+	var req schema.ResendVerificationEmailRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload")
+		return
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		utils.BindErrorResponse(c, err)
+		return
+	}
+
+	if err := h.authService.ResendVerificationEmail(req.Email, h.cfg.AppDomain); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		return
+	}
+	utils.SuccessResponse(c, nil)
+}
+
+func (h *authHandler) ProfileHandler(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "User not authenticated")
+		return
+	}
+
+	userIdUint, ok := userId.(uint)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, "Invalid user ID type")
+		return
+	}
+
+	user, err := h.authService.Profile(userIdUint)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, user)
 }
