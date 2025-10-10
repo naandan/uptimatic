@@ -1,0 +1,2 @@
+ALTER TABLE urls DROP COLUMN interval;
+ALTER TABLE urls DROP COLUMN active;

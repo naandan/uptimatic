@@ -7,7 +7,9 @@ type URL struct {
 	UserID      uint       `gorm:"not null"`
 	Label       string     `gorm:"not null"`
 	URL         string     `gorm:"not null"`
-	LastChecked *time.Time `gorm:"not null"`
+	Interval    int        `gorm:"not null"`
+	Active      bool       `gorm:"not null"`
+	LastChecked *time.Time `gorm:"null"`
 	CreatedAt   time.Time  `gorm:"autoCreateTime"`
 }
 

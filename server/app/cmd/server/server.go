@@ -31,10 +31,13 @@ func Start() {
 	validate := validator.New()
 
 	userRepo := repositories.NewUserRepository()
+	urlRepo := repositories.NewUrlRepository()
 
 	authService := services.NewAuthService(pgsql, userRepo, redis, jwtUtil, asyncClient)
+	urlService := services.NewUrlService(pgsql, urlRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, validate, &cfg)
+	urlHandler := handlers.NewURLHandler(urlService, validate)
 
 	if cfg.AppDebug {
 		gin.SetMode(gin.DebugMode)
@@ -49,6 +52,7 @@ func Start() {
 	api := r.Group("/api/v1")
 	{
 		routes.AuthRoutes(api, authHandler, &jwtUtil)
+		routes.UrlRoutes(api, urlHandler, &jwtUtil)
 	}
 
 	addr := ":" + fmt.Sprint(cfg.AppPort)

@@ -28,3 +28,7 @@ server:
 # Start Worker
 worker:
 	go run main.go worker
+
+# Start Scheduler
+scheduler:
+	go run main.go scheduler

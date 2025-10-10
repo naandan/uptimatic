@@ -1,0 +1,20 @@
+services:
+  asynqmon:
+    image: hibiken/asynqmon:latest
+    container_name: asynqmon
+    networks:
+      - redis-network
+      - asyncmon-network
+    ports:
+      - "8000:8000"
+    command:
+      [
+        "--redis-addr=redis:6379",
+        "--port=8000",
+      ]
+
+networks:
+  asyncmon-network:
+    name: asyncmon-network
+  redis-network:
+    external: true

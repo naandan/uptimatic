@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"uptimatic/internal/config"
 	"uptimatic/internal/schema"
-	service "uptimatic/internal/services"
+	"uptimatic/internal/services"
 	"uptimatic/internal/utils"
 
 	"github.com/gin-gonic/gin"
@@ -22,12 +22,12 @@ type AuthHandler interface {
 }
 
 type authHandler struct {
-	authService service.AuthService
+	authService services.AuthService
 	validate    *validator.Validate
 	cfg         *config.Config
 }
 
-func NewAuthHandler(authService service.AuthService, validate *validator.Validate, cfg *config.Config) AuthHandler {
+func NewAuthHandler(authService services.AuthService, validate *validator.Validate, cfg *config.Config) AuthHandler {
 	return &authHandler{authService, validate, cfg}
 }
 

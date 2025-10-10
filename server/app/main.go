@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"uptimatic/cmd/scheduler"
 	"uptimatic/cmd/server"
 	"uptimatic/cmd/worker"
 )
@@ -18,8 +19,8 @@ func main() {
 		server.Start()
 	case "worker":
 		worker.Start()
-	// case "scheduler":
-	// 	scheduler.Start()
+	case "scheduler":
+		scheduler.Start()
 	default:
 		fmt.Println("Unknown command:", os.Args[1])
 	}

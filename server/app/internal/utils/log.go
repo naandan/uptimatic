@@ -31,8 +31,8 @@ func InitLogger(levelStr string) {
 	zerolog.SetGlobalLevel(level)
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
-	// Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-	Logger = log.Output(os.Stdout)
+	Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	// Logger = log.Output(os.Stdout)
 }
 
 func commonFields(c *gin.Context, extra map[string]any) map[string]any {
