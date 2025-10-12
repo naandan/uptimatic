@@ -140,5 +140,5 @@ func (s *urlService) GetUptimeStats(urlID uint, mode string, offset int) ([]mode
 		return nil, err
 	}
 
-	return s.statusLogRepo.GetUptimeStats(s.db, urlID, mode, targetDate)
+	return s.statusLogRepo.GetUptimeStats(s.db, urlID, mode, targetDate.UTC())
 }
