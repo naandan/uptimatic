@@ -58,7 +58,7 @@ func (r *urlRepository) ListByUserID(tx *gorm.DB, userID uint, page, perPage int
 
 func (r *urlRepository) GetActiveURLs(tx *gorm.DB) ([]models.URL, error) {
 	var urls []models.URL
-	err := tx.Where("active = ?", true).Find(&urls).Error
+	err := tx.Preload("User").Where("active = ?", true).Find(&urls).Error
 	if err != nil {
 		return nil, err
 	}

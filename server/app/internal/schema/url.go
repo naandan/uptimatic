@@ -3,10 +3,10 @@ package schema
 import "time"
 
 type UrlRequest struct {
-	Label    string `json:"label" validate:"required"`
-	Url      string `json:"url" validate:"url,required"`
-	Interval int    `json:"interval" validate:"required"`
-	Active   bool   `json:"active" validate:"required"`
+	Label string `json:"label" validate:"required"`
+	Url   string `json:"url" validate:"url,required"`
+	// Interval int    `json:"interval" validate:"required"`
+	Active bool `json:"active" validate:"required"`
 }
 
 type UrlResponse struct {

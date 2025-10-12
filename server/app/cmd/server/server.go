@@ -32,9 +32,10 @@ func Start() {
 
 	userRepo := repositories.NewUserRepository()
 	urlRepo := repositories.NewUrlRepository()
+	logRepo := repositories.NewLogRepository()
 
 	authService := services.NewAuthService(pgsql, userRepo, redis, jwtUtil, asyncClient)
-	urlService := services.NewUrlService(pgsql, urlRepo)
+	urlService := services.NewUrlService(pgsql, urlRepo, logRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, validate, &cfg)
 	urlHandler := handlers.NewURLHandler(urlService, validate)

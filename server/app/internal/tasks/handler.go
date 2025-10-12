@@ -66,6 +66,31 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		return fmt.Errorf("failed to create status log: %w", err)
 	}
 
+	if resp.StatusCode >= 400 {
+		loc, _ := time.LoadLocation("Asia/Jakarta")
+		emailPayload, err := json.Marshal(email.EmailPayload{
+			To:      payload.User.Email,
+			Subject: "Uptime Check",
+			Type:    email.EmailDown,
+			Data: map[string]any{
+				"Label":        payload.Label,
+				"URL":          payload.URL,
+				"Status":       log.Status,
+				"ResponseTime": log.ResponseTime,
+				"CheckedAt":    log.CheckedAt.In(loc).Format("2006-01-02 15:04:05"),
+			},
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to json encode payload: %w", err)
+		}
+
+		task := asynq.NewTask(TaskSendEmail, emailPayload)
+		if _, err := h.client.Enqueue(task); err != nil {
+			return fmt.Errorf("failed to enqueue email task: %w", err)
+		}
+	}
+
 	payload.LastChecked = &log.CheckedAt
 	if err := h.urlRepo.Update(h.pgsql, &payload); err != nil {
 		return fmt.Errorf("failed to update URL: %w", err)

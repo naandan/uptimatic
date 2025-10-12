@@ -17,5 +17,6 @@ func UrlRoutes(r *gin.RouterGroup, h handlers.URLHandler, jwtUtil *utils.JWTUtil
 		urls.GET("/:id", h.GetHandler)
 		urls.PUT("/:id", h.UpdateHandler)
 		urls.DELETE("/:id", h.DeleteHandler)
+		urls.GET("/:id/stats", h.GetUptimeStats)
 	}
 }

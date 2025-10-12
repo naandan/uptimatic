@@ -1,11 +1,11 @@
 package services
 
 import (
-	"errors"
+	"fmt"
+	"time"
 	"uptimatic/internal/models"
 	"uptimatic/internal/repositories"
 	"uptimatic/internal/schema"
-	"uptimatic/internal/utils"
 
 	"gorm.io/gorm"
 )
@@ -16,27 +16,29 @@ type URLService interface {
 	Delete(id uint) error
 	FindByID(id uint) (*schema.UrlResponse, error)
 	ListByUserID(userID uint, page, perPage int) ([]schema.UrlResponse, int, error)
+	GetUptimeStats(urlID uint, mode string, offset int) ([]models.UptimeStat, error)
 }
 
 type urlService struct {
-	db      *gorm.DB
-	urlRepo repositories.UrlRepository
+	db            *gorm.DB
+	urlRepo       repositories.UrlRepository
+	statusLogRepo repositories.StatusLogRepository
 }
 
-func NewUrlService(db *gorm.DB, urlRepo repositories.UrlRepository) URLService {
-	return &urlService{db, urlRepo}
+func NewUrlService(db *gorm.DB, urlRepo repositories.UrlRepository, statusLogRepo repositories.StatusLogRepository) URLService {
+	return &urlService{db, urlRepo, statusLogRepo}
 }
 
 func (s *urlService) Create(url *schema.UrlRequest, userID uint) (*schema.UrlResponse, error) {
-	if !utils.ContainsInt(url.Interval) {
-		return nil, errors.New("invalid interval")
-	}
+	// if !utils.ContainsInt(url.Interval) {
+	// 	return nil, errors.New("invalid interval")
+	// }
 
 	urlModel := &models.URL{
 		UserID:   userID,
 		Label:    url.Label,
 		URL:      url.Url,
-		Interval: url.Interval,
+		Interval: 300,
 		Active:   url.Active,
 	}
 	err := s.urlRepo.Create(s.db, urlModel)
@@ -61,7 +63,7 @@ func (s *urlService) Update(url *schema.UrlRequest, id uint) (*schema.UrlRespons
 	}
 	urlModel.Label = url.Label
 	urlModel.URL = url.Url
-	urlModel.Interval = url.Interval
+	// urlModel.Interval = url.Interval
 	urlModel.Active = url.Active
 	err = s.urlRepo.Update(s.db, urlModel)
 	if err != nil {
@@ -120,4 +122,23 @@ func (s *urlService) ListByUserID(userID uint, page, perPage int) ([]schema.UrlR
 		})
 	}
 	return urlResponses, count, nil
+}
+
+func (s *urlService) GetUptimeStats(urlID uint, mode string, offset int) ([]models.UptimeStat, error) {
+	var targetDate time.Time
+
+	switch mode {
+	case "day":
+		targetDate = time.Now().AddDate(0, 0, -offset)
+	case "month":
+		targetDate = time.Now().AddDate(0, -offset, 0)
+	default:
+		return nil, fmt.Errorf("invalid mode: %s", mode)
+	}
+
+	if _, err := s.statusLogRepo.GetByID(s.db, urlID); err != nil {
+		return nil, err
+	}
+
+	return s.statusLogRepo.GetUptimeStats(s.db, urlID, mode, targetDate)
 }

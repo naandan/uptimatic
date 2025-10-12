@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"time"
 	"uptimatic/internal/models"
 
 	"gorm.io/gorm"
@@ -8,7 +10,9 @@ import (
 
 type StatusLogRepository interface {
 	Create(tx *gorm.DB, log *models.StatusLog) error
+	GetByID(tx *gorm.DB, id uint) (*models.StatusLog, error)
 	ListByURLID(tx *gorm.DB, urlID uint) ([]models.StatusLog, error)
+	GetUptimeStats(tx *gorm.DB, urlID uint, mode string, targetDate time.Time) ([]models.UptimeStat, error)
 }
 
 type statusLogRepository struct{}
@@ -21,6 +25,15 @@ func (r *statusLogRepository) Create(tx *gorm.DB, log *models.StatusLog) error {
 	return tx.Create(log).Error
 }
 
+func (r *statusLogRepository) GetByID(tx *gorm.DB, id uint) (*models.StatusLog, error) {
+	var log models.StatusLog
+	err := tx.First(&log, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &log, nil
+}
+
 func (r *statusLogRepository) ListByURLID(tx *gorm.DB, urlID uint) ([]models.StatusLog, error) {
 	var logs []models.StatusLog
 	err := tx.Where("url_id = ?", urlID).Find(&logs).Error
@@ -28,4 +41,46 @@ func (r *statusLogRepository) ListByURLID(tx *gorm.DB, urlID uint) ([]models.Sta
 		return nil, err
 	}
 	return logs, nil
+}
+
+func (r *statusLogRepository) GetUptimeStats(tx *gorm.DB, urlID uint, mode string, targetDate time.Time) ([]models.UptimeStat, error) {
+	var results []models.UptimeStat
+
+	var truncUnit string
+	var start, end time.Time
+
+	switch mode {
+	case "day":
+		truncUnit = "hour"
+		start = targetDate.Truncate(24 * time.Hour)
+		end = start.Add(24 * time.Hour)
+	case "month":
+		truncUnit = "day"
+		start = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, time.UTC)
+		end = start.AddDate(0, 1, 0)
+	default:
+		return nil, fmt.Errorf("invalid mode: %s", mode)
+	}
+
+	query := `
+		SELECT
+			date_trunc(?, checked_at) AS bucket_start,
+			COUNT(*) AS total_checks,
+			COUNT(*) FILTER (WHERE status BETWEEN 200 AND 299) AS up_checks,
+			ROUND(
+				COUNT(*) FILTER (WHERE status BETWEEN 200 AND 299) * 100.0 / COUNT(*),
+				2
+			) AS uptime_percent
+		FROM status_logs
+		WHERE url_id = ?
+		  AND checked_at BETWEEN ? AND ?
+		GROUP BY bucket_start
+		ORDER BY bucket_start ASC;
+	`
+
+	if err := tx.Raw(query, truncUnit, urlID, start, end).Scan(&results).Error; err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
