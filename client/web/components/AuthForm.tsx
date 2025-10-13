@@ -37,7 +37,6 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     if (type === "register") {
       try {
         const res = await authService.register(payload);
-        console.log(res.data);
         router.push("/auth/login");
       } catch (err) {
         console.error(err);
@@ -47,7 +46,6 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     }else{
       try {
         const res = await authService.login(payload)
-        console.log(res.data);
         setLoggedIn(true);
         router.push("/uptime");
       } catch (err) {

@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,7 +44,6 @@ export function AddEditDialog({
       interval: Number(form.interval),
       active: form.active,
     });
-    // onClose();
   };
 
   return (
@@ -97,7 +95,7 @@ export function AddEditDialog({
             <Switch
               checked={form.active}
               onCheckedChange={(checked) =>
-                setForm({ ...form, active: checked })
+                setForm({ ...form, active: checked?? false })
               }
             />
           </div>

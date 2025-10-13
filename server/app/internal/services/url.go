@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"time"
 	"uptimatic/internal/models"
@@ -15,7 +16,7 @@ type URLService interface {
 	Update(url *schema.UrlRequest, id uint) (*schema.UrlResponse, error)
 	Delete(id uint) error
 	FindByID(id uint) (*schema.UrlResponse, error)
-	ListByUserID(userID uint, page, perPage int) ([]schema.UrlResponse, int, error)
+	ListByUserID(userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, error)
 	GetUptimeStats(urlID uint, mode string, offset int) ([]models.UptimeStat, error)
 }
 
@@ -39,7 +40,7 @@ func (s *urlService) Create(url *schema.UrlRequest, userID uint) (*schema.UrlRes
 		Label:    url.Label,
 		URL:      url.Url,
 		Interval: 300,
-		Active:   url.Active,
+		Active:   *url.Active,
 	}
 	err := s.urlRepo.Create(s.db, urlModel)
 	if err != nil {
@@ -64,7 +65,7 @@ func (s *urlService) Update(url *schema.UrlRequest, id uint) (*schema.UrlRespons
 	urlModel.Label = url.Label
 	urlModel.URL = url.Url
 	// urlModel.Interval = url.Interval
-	urlModel.Active = url.Active
+	urlModel.Active = *url.Active
 	err = s.urlRepo.Update(s.db, urlModel)
 	if err != nil {
 		return nil, err
@@ -104,8 +105,8 @@ func (s *urlService) FindByID(id uint) (*schema.UrlResponse, error) {
 	}, nil
 }
 
-func (s *urlService) ListByUserID(userID uint, page, perPage int) ([]schema.UrlResponse, int, error) {
-	urls, count, err := s.urlRepo.ListByUserID(s.db, userID, page, perPage)
+func (s *urlService) ListByUserID(userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, error) {
+	urls, count, err := s.urlRepo.ListByUserID(s.db, userID, page, perPage, active, searchLabel, sortBy)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -120,6 +121,9 @@ func (s *urlService) ListByUserID(userID uint, page, perPage int) ([]schema.UrlR
 			LastChecked: url.LastChecked,
 			CreatedAt:   url.CreatedAt,
 		})
+	}
+	if len(urlResponses) == 0 {
+		return []schema.UrlResponse{}, 0, nil
 	}
 	return urlResponses, count, nil
 }
@@ -136,9 +140,21 @@ func (s *urlService) GetUptimeStats(urlID uint, mode string, offset int) ([]mode
 		return nil, fmt.Errorf("invalid mode: %s", mode)
 	}
 
-	if _, err := s.statusLogRepo.GetByID(s.db, urlID); err != nil {
+	// if _, err := s.urlRepo.(s.db, urlID); err != nil {
+	// 	// return nil, err
+	// 	if errors.Is(err, gorm.ErrRecordNotFound) {
+	// 		return []models.UptimeStat{}, nil
+	// 	}
+	// 	return nil, err
+	// }
+
+	logs, err := s.statusLogRepo.GetUptimeStats(s.db, urlID, mode, targetDate.UTC())
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []models.UptimeStat{}, nil
+		}
 		return nil, err
 	}
 
-	return s.statusLogRepo.GetUptimeStats(s.db, urlID, mode, targetDate.UTC())
+	return logs, nil
 }

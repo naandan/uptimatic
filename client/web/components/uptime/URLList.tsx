@@ -10,34 +10,67 @@ import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
 import { URL } from "@/types/uptime";
-import { urlService } from "@/lib/services/url";
+import { URLRequest, urlService } from "@/lib/services/url";
+import { toast } from "sonner";
 
 export default function URLList() {
   const { query, setQuery, filter, setFilter, sortBy, setSortBy, page, setPage } =
     useURLQueryParams();
 
-  const { urls, totalPages, loading } = useURLs({ query, filter, sortBy, page });
+  const { urls, totalPages, loading, setUrls } = useURLs({ query, filter, sortBy, page });
 
   const [openAdd, setOpenAdd] = useState(false);
   const [editData, setEditData] = useState<URL | null>(null);
   const [deleteData, setDeleteData] = useState<URL | null>(null);
 
-  const handleAdd = (data: URL) => {
-    // await urlService.create(data);
-    setOpenAdd(false);
+  const handleAdd = (data: URLRequest) => {
+    urlService.create(data)
+    .then((res) => {
+      setUrls([...urls, res.data]);
+      setOpenAdd(false);
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error(err.response.data.message);
+    });
   };
-  const handleEdit = (data: URL) => {
-    // await urlService.update(id, data);
-    setEditData(null);
-    setOpenAdd(false);
+  const handleEdit = (data: URLRequest) => {
+    if (!editData) return;
+    urlService.update(editData.id, data)
+    .then((res) => {
+      setEditData(null);
+      setUrls(urls.map((url) => (url.id === res.id ? res : url)));
+      toast.success("URL berhasil diperbarui");
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error(err.response.data.message);
+    });
   };
   const handleDelete = (id: number) => {
-    // await urlService.delete(id);
+    urlService.delete(id)
+    .then(() => {
+      setUrls(urls.filter((url) => url.id !== id));
+      toast.success("URL berhasil dihapus");
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error(err.response.data.message);
+    });
     setDeleteData(null);
   };
 
+  const handleToggle = (id: number) => {
+    if (!urls) return;
+    let url = urls.find((url) => url.id === id);
+    if (!url) return;
+
+    urlService.update(id, { active: !url.active, label: url.label, url: url.url });
+    setUrls(urls.map((url) => (url.id === id ? { ...url, active: !url.active } : url)));
+  }
+
   return (
-    <div className="py-12 max-w-7xl mx-auto">
+    <div className="py-12 max-w-7xl mx-auto px-4">
       {/* Header + Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <Input
@@ -77,14 +110,14 @@ export default function URLList() {
       ) : urls.length === 0 ? (
         <p className="text-center text-slate-500 mt-6">Tidak ada data</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {urls.map((url: URL) => (
             <URLCard
               key={url.id}
               data={url}
               onDelete={() => setDeleteData(url)}
               onEdit={() => setEditData(url)}
-              onToggle={(id) => console.log(id)}
+              onToggle={(id) => handleToggle(id)}
             />
           ))}
         </div>

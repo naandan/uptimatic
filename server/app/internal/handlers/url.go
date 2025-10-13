@@ -110,16 +110,34 @@ func (h *urlHandler) GetHandler(c *gin.Context) {
 
 func (h *urlHandler) ListHandler(c *gin.Context) {
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+	if err != nil || page < 1 {
+		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "Invalid page")
 		return
 	}
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+	if err != nil || limit < 1 {
+		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "Invalid limit")
 		return
 	}
-	urls, count, err := h.urlService.ListByUserID(c.GetUint("user_id"), page, limit)
+
+	var active *bool
+	if a := c.Query("active"); a != "" {
+		switch a {
+		case "active":
+			active = new(bool)
+			*active = true
+		case "inactive":
+			active = new(bool)
+			*active = false
+		default:
+			active = nil
+		}
+	}
+
+	searchLabel := c.Query("q")
+	sortBy := c.DefaultQuery("sort", "label")
+
+	urls, count, err := h.urlService.ListByUserID(c.GetUint("user_id"), page, limit, active, searchLabel, sortBy)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return

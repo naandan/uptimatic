@@ -11,7 +11,7 @@ type UrlRepository interface {
 	Update(tx *gorm.DB, url *models.URL) error
 	Delete(tx *gorm.DB, url *models.URL) error
 	FindByID(tx *gorm.DB, id uint) (*models.URL, error)
-	ListByUserID(tx *gorm.DB, userID uint, page, perPage int) ([]models.URL, int, error)
+	ListByUserID(tx *gorm.DB, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]models.URL, int, error)
 	GetActiveURLs(tx *gorm.DB) ([]models.URL, error)
 }
 
@@ -42,17 +42,42 @@ func (r *urlRepository) FindByID(tx *gorm.DB, id uint) (*models.URL, error) {
 	return &url, nil
 }
 
-func (r *urlRepository) ListByUserID(tx *gorm.DB, userID uint, page, perPage int) ([]models.URL, int, error) {
+func (r *urlRepository) ListByUserID(
+	tx *gorm.DB,
+	userID uint,
+	page, perPage int,
+	active *bool,
+	searchLabel string,
+	sortBy string,
+) ([]models.URL, int, error) {
+
 	var urls []models.URL
 	var count int64
-	err := tx.Where("user_id = ?", userID).Offset((page - 1) * perPage).Limit(perPage).Find(&urls).Error
-	if err != nil {
+
+	query := tx.Model(&models.URL{}).Where("user_id = ?", userID)
+
+	if active != nil {
+		query = query.Where("active = ?", *active)
+	}
+
+	if searchLabel != "" {
+		query = query.Where("label ILIKE ?", "%"+searchLabel+"%") // PostgreSQL
+	}
+
+	if err := query.Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
-	err = tx.Model(&models.URL{}).Where("user_id = ?", userID).Count(&count).Error
-	if err != nil {
+
+	if sortBy != "label" && sortBy != "created_at" {
+		sortBy = "created_at"
+	}
+
+	query = query.Order(sortBy + " " + "asc")
+
+	if err := query.Offset((page - 1) * perPage).Limit(perPage).Find(&urls).Error; err != nil {
 		return nil, 0, err
 	}
+
 	return urls, int(count), nil
 }
 

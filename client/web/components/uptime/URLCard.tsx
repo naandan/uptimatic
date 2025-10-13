@@ -3,7 +3,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { URL } from "@/types/uptime";
-import { Globe, Edit, Trash2 } from "lucide-react";
+import { formatTimeGMT7 } from "@/utils/format";
+import { Globe, Trash2, Edit2 } from "lucide-react";
+import Link from "next/link";
 
 interface URLCardProps {
   data: URL;
@@ -20,7 +22,11 @@ export default function URLCard({ data, onToggle, onEdit, onDelete }: URLCardPro
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Globe className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-slate-800">{data.label}</h3>
+            <h3 className="font-semibold text-slate-800">
+              <Link href={`/uptime/${data.id}`}>
+                {data.label}
+              </Link>
+            </h3>
           </div>
           <Badge
             variant={data.active ? "default" : "secondary"}
@@ -38,17 +44,14 @@ export default function URLCard({ data, onToggle, onEdit, onDelete }: URLCardPro
         </p>
         <p className="text-xs text-slate-500">
           Terakhir dicek:{" "}
-          {new Date(data.last_checked).toLocaleString("id-ID", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          {formatTimeGMT7(data.last_checked)}
         </p>
       </div>
 
       <div className="flex items-center justify-between mt-4">
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit className="w-4 h-4" />
+            <Edit2 className="w-4 h-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={onDelete}>
             <Trash2 className="w-4 h-4 text-red-500" />

@@ -11,24 +11,17 @@ export function useURLs({ query, filter, sortBy, page }: any) {
     setLoading(true);
     const params = new URLSearchParams();
     if (query) params.set("q", query);
-    if (filter) params.set("filter", filter);
+    if (filter) params.set("active", filter);
     if (sortBy) params.set("sort", sortBy);
     if (page) params.set("page", page.toString());
 
-    // fetch(`/api/urls?${params.toString()}`)
-    //   .then((res) => res.json())
-    //   .then((data) => {
-    //     setUrls(data.urls);
-    //     setTotalPages(data.totalPages);
-    //   })
-    //   .finally(() => setLoading(false));
+    urlService.list(params.toString()).then((data) => {
+      setUrls(data.data);
+      setTotalPages(data.meta.total_page);
+      setLoading(false);
+    })
 
-      urlService.list().then((data) => {
-        setUrls(data.data);
-        setTotalPages(data.meta.total_page);
-        setLoading(false);
-      })
   }, [query, filter, sortBy, page]);
 
-  return { urls, totalPages, loading };
+  return { urls, totalPages, loading, setUrls };
 }
