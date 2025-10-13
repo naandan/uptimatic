@@ -16,7 +16,7 @@ func AuthRoutes(r *gin.RouterGroup, h handlers.AuthHandler, jwtUtil *utils.JWTUt
 		auth.POST("/logout", h.LogoutHandler)
 		auth.POST("/refresh", h.RefreshHandler)
 		auth.GET("/verify", h.VerifyHandler)
-		auth.POST("/resend-verification-email", h.ResendVerificationHandler)
+		auth.POST("/resend-verification", middlewares.AuthMiddleware(jwtUtil), h.ResendVerificationHandler)
 	}
 	r.GET("/profile", middlewares.AuthMiddleware(jwtUtil), h.ProfileHandler)
 }

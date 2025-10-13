@@ -22,8 +22,23 @@ export const authService = {
         return res.data;
     },
 
+    refresh: async () => {
+        const res = await api.post("/auth/refresh");
+        return res.data;
+    },
+
     profile: async () => {
         const res = await api.get("/profile");
+        return res.data;
+    },
+
+    verify: async (token: string) => {
+        const res = await api.get(`/auth/verify?token=${token}`);
+        return res.data;
+    },
+
+    resendVerificationEmail: async () => {
+        const res = await api.post(`/auth/resend-verification`);
         return res.data;
     }
 };

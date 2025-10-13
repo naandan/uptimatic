@@ -23,7 +23,7 @@ type AuthService interface {
 	Logout(refreshToken string) error
 	Refresh(refreshToken string) (string, string, error)
 	VerifyEmail(token string) error
-	ResendVerificationEmail(email string, appUrl string) error
+	ResendVerificationEmail(userId uint, appUrl string) error
 	Profile(userId uint) (*models.User, error)
 }
 
@@ -51,7 +51,7 @@ func (s *authService) Register(userEmail, password string, appUrl string) (*mode
 		return nil, err
 	}
 
-	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
+	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID, user.Verified)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (s *authService) Login(email, password string) (string, string, error) {
 		return "", "", err
 	}
 
-	access, refresh, err := s.jwtUtil.GenerateTokens(user.ID)
+	access, refresh, err := s.jwtUtil.GenerateTokens(user.ID, user.Verified)
 	if err != nil {
 		return "", "", err
 	}
@@ -107,7 +107,7 @@ func (s *authService) Refresh(oldRefresh string) (string, string, error) {
 		return "", "", err
 	}
 
-	access, refresh, err := s.jwtUtil.GenerateTokens(user.ID)
+	access, refresh, err := s.jwtUtil.GenerateTokens(user.ID, user.Verified)
 	if err != nil {
 		return "", "", err
 	}
@@ -148,8 +148,8 @@ func (s *authService) VerifyEmail(token string) error {
 	return nil
 }
 
-func (s *authService) ResendVerificationEmail(userEmail string, appUrl string) error {
-	user, err := s.userRepo.FindByEmail(s.db, userEmail)
+func (s *authService) ResendVerificationEmail(userID uint, appUrl string) error {
+	user, err := s.userRepo.FindByID(s.db, userID)
 	if err != nil {
 		return err
 	}
@@ -157,13 +157,13 @@ func (s *authService) ResendVerificationEmail(userEmail string, appUrl string) e
 		return errors.New("email already verified")
 	}
 
-	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
+	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID, user.Verified)
 	if err != nil {
 		return err
 	}
 
-	link := fmt.Sprintf("%s/api/v1/auth/verify?token=%s", appUrl, token)
-	tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"Name": user.Email, "VerificationLink": link})
+	link := fmt.Sprintf("%s/auth/verify?token=%s", appUrl, token)
+	tasks.EnqueueEmail(s.asyncClient, user.Email, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"Name": user.Email, "VerificationLink": link})
 	return nil
 }
 

@@ -132,19 +132,13 @@ func (h *authHandler) VerifyHandler(c *gin.Context) {
 }
 
 func (h *authHandler) ResendVerificationHandler(c *gin.Context) {
-	var req schema.ResendVerificationEmailRequest
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload")
+	userID := c.GetUint("user_id")
+	if userID == 0 {
+		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "User not authenticated")
 		return
 	}
 
-	if err := h.validate.Struct(req); err != nil {
-		utils.BindErrorResponse(c, err)
-		return
-	}
-
-	if err := h.authService.ResendVerificationEmail(req.Email, h.cfg.AppDomain); err != nil {
+	if err := h.authService.ResendVerificationEmail(userID, h.cfg.AppDomain); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
 	}
