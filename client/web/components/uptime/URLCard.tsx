@@ -34,7 +34,7 @@ export default function URLCard({ data, onToggle, onEdit, onDelete }: URLCardPro
 
         <p className="text-sm text-primary truncate mb-2">{data.url}</p>
         <p className="text-xs text-slate-500">
-          Interval: {data.interval} menit
+          Interval: {data.interval/60} menit
         </p>
         <p className="text-xs text-slate-500">
           Terakhir dicek:{" "}

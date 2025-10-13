@@ -10,6 +10,7 @@ import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
 import { URL } from "@/types/uptime";
+import { urlService } from "@/lib/services/url";
 
 export default function URLList() {
   const { query, setQuery, filter, setFilter, sortBy, setSortBy, page, setPage } =
@@ -20,6 +21,20 @@ export default function URLList() {
   const [openAdd, setOpenAdd] = useState(false);
   const [editData, setEditData] = useState<URL | null>(null);
   const [deleteData, setDeleteData] = useState<URL | null>(null);
+
+  const handleAdd = (data: URL) => {
+    // await urlService.create(data);
+    setOpenAdd(false);
+  };
+  const handleEdit = (data: URL) => {
+    // await urlService.update(id, data);
+    setEditData(null);
+    setOpenAdd(false);
+  };
+  const handleDelete = (id: number) => {
+    // await urlService.delete(id);
+    setDeleteData(null);
+  };
 
   return (
     <div className="py-12 max-w-7xl mx-auto">
@@ -90,9 +105,9 @@ export default function URLList() {
       )}
 
       {/* Dialogs */}
-      <AddEditDialog open={openAdd} mode="add" onClose={() => setOpenAdd(false)} onSave={() => {}} />
-      {editData && <AddEditDialog open={!!editData} mode="edit" initialData={editData} onClose={() => setEditData(null)} onSave={() => {}} />}
-      {deleteData && <DeleteDialog open={!!deleteData} targetLabel={deleteData.label} onClose={() => setDeleteData(null)} onConfirm={() => {}} />}
+      <AddEditDialog open={openAdd} mode="add" onClose={() => setOpenAdd(false)} onSave={handleAdd} />
+      {editData && <AddEditDialog open={!!editData} mode="edit" initialData={editData} onClose={() => setEditData(null)} onSave={handleEdit} />}
+      {deleteData && <DeleteDialog open={!!deleteData} targetLabel={deleteData.label} onClose={() => setDeleteData(null)} onConfirm={() => handleDelete(deleteData.id)} />}
     </div>
 
   );

@@ -45,7 +45,7 @@ export function AddEditDialog({
       interval: Number(form.interval),
       active: form.active,
     });
-    onClose();
+    // onClose();
   };
 
   return (

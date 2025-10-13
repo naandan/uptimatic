@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { URL } from "@/types/uptime";
+import { urlService } from "@/lib/services/url";
 
 export function useURLs({ query, filter, sortBy, page }: any) {
   const [urls, setUrls] = useState<URL[]>([]);
@@ -14,13 +15,19 @@ export function useURLs({ query, filter, sortBy, page }: any) {
     if (sortBy) params.set("sort", sortBy);
     if (page) params.set("page", page.toString());
 
-    fetch(`/api/urls?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setUrls(data.urls);
-        setTotalPages(data.totalPages);
+    // fetch(`/api/urls?${params.toString()}`)
+    //   .then((res) => res.json())
+    //   .then((data) => {
+    //     setUrls(data.urls);
+    //     setTotalPages(data.totalPages);
+    //   })
+    //   .finally(() => setLoading(false));
+
+      urlService.list().then((data) => {
+        setUrls(data.data);
+        setTotalPages(data.meta.total_page);
+        setLoading(false);
       })
-      .finally(() => setLoading(false));
   }, [query, filter, sortBy, page]);
 
   return { urls, totalPages, loading };

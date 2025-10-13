@@ -20,5 +20,10 @@ export const authService = {
     logout: async () => {
         const res = await api.post("/auth/logout");
         return res.data;
+    },
+
+    profile: async () => {
+        const res = await api.get("/profile");
+        return res.data;
     }
 };

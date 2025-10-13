@@ -15,12 +15,15 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { authService } from "@/lib/services/auts";
+import { useAuth } from "@/context/AuthContext";
 
 interface AuthFormProps {
   type: "login" | "register";
 }
 
 export const AuthForm = ({ type }: AuthFormProps) => {
+  const {isLoggedIn, setLoggedIn} = useAuth();
   const router = useRouter();
   const [payload, setPayload] = useState({
     email: "",
@@ -31,12 +34,28 @@ export const AuthForm = ({ type }: AuthFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    // TODO: ganti dengan logika autentikasi (NextAuth, Supabase, dsb)
-    await new Promise((r) => setTimeout(r, 1000));
-    console.log(payload);
-    setLoading(false);
-    router.push("/dashboard");
+    if (type === "register") {
+      try {
+        const res = await authService.register(payload);
+        console.log(res.data);
+        router.push("/auth/login");
+      } catch (err) {
+        console.error(err);
+      }finally {
+        setLoading(false);
+      }
+    }else{
+      try {
+        const res = await authService.login(payload)
+        console.log(res.data);
+        setLoggedIn(true);
+        router.push("/uptime");
+      } catch (err) {
+        console.error(err);
+      }finally {
+        setLoading(false);
+      }
+    }
   };
 
   return (
