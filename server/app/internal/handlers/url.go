@@ -114,21 +114,18 @@ func (h *urlHandler) ListHandler(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
 		return
 	}
-	perPage, err := strconv.Atoi(c.DefaultQuery("per_page", "10"))
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
 		return
 	}
-	urls, total, err := h.urlService.ListByUserID(c.GetUint("user_id"), page, perPage)
+	urls, count, err := h.urlService.ListByUserID(c.GetUint("user_id"), page, limit)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"total": total,
-		"data":  urls,
-	})
+	utils.PaginatedResponse(c, urls, count, limit, page, (count+limit-1)/limit)
 }
 
 func (h *urlHandler) GetUptimeStats(c *gin.Context) {

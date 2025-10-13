@@ -34,6 +34,20 @@ func SuccessResponse(c *gin.Context, data any) {
 	})
 }
 
+func PaginatedResponse(c *gin.Context, data any, count, limit, page, totalPage int) {
+	c.JSON(http.StatusOK, gin.H{
+		"request_id": getRequestID(c),
+		"status":     "success",
+		"data":       data,
+		"meta": gin.H{
+			"total":      count,
+			"limit":      limit,
+			"page":       page,
+			"total_page": totalPage,
+		},
+	})
+}
+
 func ErrorResponse(c *gin.Context, status int, code, message string) {
 	c.JSON(status, gin.H{
 		"request_id": getRequestID(c),

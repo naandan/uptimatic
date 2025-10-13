@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 type Bucket = {
   bucket_start: string;
@@ -21,6 +22,12 @@ interface UptimeData {
 interface Props {
   urlId: number; // ID URL yang akan ditampilkan
 }
+
+const getBarColor = (uptime: number) => {
+  if (uptime >= 90) return "#22c55e"; // hijau
+  if (uptime >= 70) return "#f59e0b"; // kuning/orange
+  return "#ef4444"; // merah
+};
 
 // utils/generateDummyUptime.ts
 export function generateDummyUptime(mode: "day" | "month", offset: number = 0) {
@@ -95,8 +102,12 @@ export default function UptimeStats({ urlId }: Props) {
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex gap-2">
-          <Button onClick={handlePrev}>{"<"}</Button>
-          <Button onClick={handleNext}>{" >"}</Button>
+          <Button onClick={handlePrev} variant="outline">
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button onClick={handleNext} variant="outline">
+            <ChevronRight className="w-4 h-4" />
+          </Button>
         </div>
 
         <Select value={mode} onValueChange={(v: any) => setMode(v)}>
@@ -132,7 +143,11 @@ export default function UptimeStats({ urlId }: Props) {
               formatter={(value: any) => [`${value}%`, "Uptime"]}
               labelFormatter={(label: string) => `Waktu: ${new Date(label).toLocaleString()}`}
             />
-            <Bar dataKey="uptime_percent" fill="#22c55e" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="uptime_percent" radius={[4, 4, 0, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getBarColor(entry.uptime_percent)} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       )}
