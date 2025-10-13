@@ -5,14 +5,17 @@ export function middleware(req: NextRequest) {
   const pathname = nextUrl.pathname;
 
   const authRoutes = ["/auth/login", "/auth/register"];
-
-  if (authRoutes.some((path) => pathname.startsWith(path))) {
-    return NextResponse.next();
-  }
+  const protectedRoutes = ["/uptime"]; // bisa ditambah kalau perlu
 
   const token = cookies.get("refresh_token")?.value;
 
-  if (!token) {
+  // Jika user sudah login dan mencoba ke /auth/login atau /auth/register → redirect
+  if (token && authRoutes.some((path) => pathname.startsWith(path))) {
+    return NextResponse.redirect(new URL("/uptime", req.url));
+  }
+
+  // Jika user belum login dan mencoba akses halaman protected → redirect ke login
+  if (!token && protectedRoutes.some((path) => pathname.startsWith(path))) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 

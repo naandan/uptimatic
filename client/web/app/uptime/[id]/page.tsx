@@ -53,7 +53,7 @@ export default function UptimeStats() {
   const handleNext = () => setOffset(Math.max(0, offset - 1));
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="mt-12 max-w-5xl mx-auto min-h-screen px-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-2">
           <Button onClick={() => router.push('/uptime')} variant="ghost">
@@ -101,7 +101,7 @@ export default function UptimeStats() {
             <YAxis domain={[0, 100]} unit="%" />
             <Tooltip
               formatter={(value: any) => [`${value}%`, "Uptime"]}
-              labelFormatter={(label: string) => `Waktu: ${formatDateTimeGMT7(label)}`}
+              labelFormatter={(label: string) => `Waktu: ${mode === "day" ? formatDateTimeGMT7(label) : formatDateGMT7(label)}`}
             />
             <Bar dataKey="uptime_percent" radius={[4, 4, 0, 0]}>
               {data.map((entry, index) => (
