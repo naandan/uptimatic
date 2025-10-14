@@ -33,10 +33,6 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Cek dulu apakah cookie refresh token ada
-        const hasRefreshToken = document.cookie.includes("refresh_token");
-        if (!hasRefreshToken) throw new Error("No refresh token");
-
         await api.post("/auth/refresh");
         processQueue(null);
         return api(originalRequest);
