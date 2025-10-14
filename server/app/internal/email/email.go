@@ -3,14 +3,19 @@ package email
 import (
 	"bytes"
 	"context"
+	"embed"
 	"fmt"
 	"html/template"
 	"net/smtp"
 	"time"
+
 	"uptimatic/internal/config"
 
 	"github.com/jordan-wright/email"
 )
+
+//go:embed templates/*.html
+var templatesFS embed.FS
 
 type EmailTask struct {
 	cfg      *config.Config
@@ -34,16 +39,20 @@ type EmailPayload struct {
 }
 
 func NewEmailTask(cfg *config.Config) (*EmailTask, error) {
-	t := &EmailTask{cfg: cfg, tplCache: map[EmailType]*template.Template{}}
+	t := &EmailTask{
+		cfg:      cfg,
+		tplCache: map[EmailType]*template.Template{},
+	}
 
 	types := []EmailType{EmailWelcome, EmailVerify, EmailPasswordReset, EmailDown}
 	for _, typ := range types {
-		tpl, err := template.ParseFiles(fmt.Sprintf("internal/email/templates/%s.html", typ))
+		tpl, err := template.ParseFS(templatesFS, fmt.Sprintf("templates/%s.html", typ))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse template %s: %w", typ, err)
 		}
 		t.tplCache[typ] = tpl
 	}
+
 	return t, nil
 }
 

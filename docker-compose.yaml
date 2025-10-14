@@ -1,7 +1,7 @@
 
 services:
   client:
-    image: ghcr.io/naandan/uptimatic-client:main
+    image: uptimatic-client
     container_name: uptimatic-client
     ports:
       - "3001:3000"
@@ -9,7 +9,7 @@ services:
       - uptimatic-network
   
   server:
-    image: ghcr.io/naandan/uptimatic-server:main
+    image: uptimatic-server
     container_name: uptimatic-server
     ports:
       - "8081:8080"
