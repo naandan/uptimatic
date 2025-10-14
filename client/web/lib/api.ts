@@ -21,13 +21,11 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 
-    // Kalau unauthorized → refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        })
-          .then(() => api(originalRequest))
+        }).then(() => api(originalRequest))
           .catch((err) => Promise.reject(err));
       }
 
@@ -35,11 +33,17 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await api.post("/auth/refresh"); // backend refresh dari cookie
+        // Cek dulu apakah cookie refresh token ada
+        const hasRefreshToken = document.cookie.includes("refresh_token");
+        if (!hasRefreshToken) throw new Error("No refresh token");
+
+        await api.post("/auth/refresh");
         processQueue(null);
-        return api(originalRequest); // ulang request sebelumnya
+        return api(originalRequest);
       } catch (err) {
         processQueue(err as AxiosError);
+        // reset queue supaya tidak hang
+        failedQueue = [];
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
@@ -49,5 +53,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 export default api;

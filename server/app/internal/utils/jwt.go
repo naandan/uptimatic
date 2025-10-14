@@ -72,11 +72,10 @@ func (j *JWTUtil) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	return claims, nil
 }
 
-func (j *JWTUtil) GenerateEmailVerificationToken(userID uint, verified bool) (string, error) {
+func (j *JWTUtil) GenerateEmailVerificationToken(userID uint) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id":  userID,
-		"verified": verified,
-		"exp":      time.Now().Add(24 * time.Hour).Unix(),
+		"user_id": userID,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(j.Secret))

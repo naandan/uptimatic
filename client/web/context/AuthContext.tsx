@@ -16,7 +16,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const getProfile = async () => {
       try{
-        const res = await authService.profile();
+        await authService.profile();
         setIsLoggedIn(true);
       }catch(err){
         console.error(err);

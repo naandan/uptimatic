@@ -51,7 +51,7 @@ func (s *authService) Register(userEmail, password string, appUrl string) (*mode
 		return nil, err
 	}
 
-	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID, user.Verified)
+	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (s *authService) ResendVerificationEmail(userID uint, appUrl string) error 
 		return errors.New("email already verified")
 	}
 
-	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID, user.Verified)
+	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
 	if err != nil {
 		return err
 	}

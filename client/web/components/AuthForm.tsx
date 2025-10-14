@@ -23,7 +23,7 @@ interface AuthFormProps {
 }
 
 export const AuthForm = ({ type }: AuthFormProps) => {
-  const {isLoggedIn, setLoggedIn} = useAuth();
+  const { setLoggedIn } = useAuth();
   const router = useRouter();
   const [payload, setPayload] = useState({
     email: "",
@@ -36,7 +36,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     setLoading(true);
     if (type === "register") {
       try {
-        const res = await authService.register(payload);
+        await authService.register(payload);
         router.push("/auth/login");
       } catch (err) {
         console.error(err);
@@ -45,7 +45,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
       }
     }else{
       try {
-        const res = await authService.login(payload)
+        await authService.login(payload)
         setLoggedIn(true);
         router.push("/uptime");
       } catch (err) {

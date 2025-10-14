@@ -8,14 +8,23 @@ export function middleware(req: NextRequest) {
 
   // --- Batas route ---
   const authRoutes = ["/auth/login", "/auth/register"];
-  const verifyRoutes = ["/auth/verify", "/auth/verify-success"];
   const protectedRoutes = ["/uptime"];
+  const verifyRoutes = ["/auth/verify", "/auth/verify-success"];
+  const resendRoute = "/auth/resend-verification";
 
   // --- Kalau belum login ---
   if (!token) {
+    // Blokir protected route
     if (protectedRoutes.some((p) => pathname.startsWith(p))) {
       return NextResponse.redirect(new URL("/auth/login", req.url));
     }
+
+    // Blokir resend-verification (harus login)
+    if (pathname.startsWith(resendRoute)) {
+      return NextResponse.redirect(new URL("/auth/login", req.url));
+    }
+
+    // Tapi biarkan akses ke /auth/verify & /auth/verify-success
     return NextResponse.next();
   }
 
@@ -26,22 +35,21 @@ export function middleware(req: NextRequest) {
     const decodedPayload = JSON.parse(Buffer.from(payloadBase64, "base64").toString());
     verified = decodedPayload.verified === true;
   } catch {
-    // Jika token rusak, anggap belum verified
-    verified = false;
+    verified = false; // token rusak
   }
 
   // --- Kalau sudah login tapi belum verify ---
   if (!verified && protectedRoutes.some((p) => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL("/auth/verify", req.url));
+    return NextResponse.redirect(new URL("/auth/resend-verification", req.url));
   }
 
-  // --- Kalau sudah verified, jangan bisa buka /auth/verify & /auth/verify-success ---
-  if (verified && verifyRoutes.some((p) => pathname.startsWith(p))) {
+  // --- Kalau sudah verified, jangan bisa buka login/register lagi ---
+  if (verified && authRoutes.some((p) => pathname.startsWith(p))) {
     return NextResponse.redirect(new URL("/uptime", req.url));
   }
 
-  // --- Kalau sudah login, jangan bisa buka login/register lagi ---
-  if (token && authRoutes.some((p) => pathname.startsWith(p))) {
+  // --- Kalau sudah verified, tapi buka /auth/verify atau /auth/verify-success, arahkan ke uptime ---
+  if (verified && [verifyRoutes[0]].some((p) => pathname === p)) {
     return NextResponse.redirect(new URL("/uptime", req.url));
   }
 
@@ -53,6 +61,7 @@ export const config = {
     "/uptime/:path*",
     "/auth/login",
     "/auth/register",
+    "/auth/resend-verification",
     "/auth/verify",
     "/auth/verify-success",
   ],
