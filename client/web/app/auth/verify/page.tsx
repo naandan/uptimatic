@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { authService } from "@/lib/services/auts";
+import { authService } from "@/lib/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const { isLoggedIn } = useAuth();
   const router = useRouter();
 
   const [message, setMessage] = useState("Memverifikasi email kamu...");
@@ -25,8 +24,8 @@ export default function VerifyEmailPage() {
       try {
         await authService.verify(token);
         try {
-          await authService.profile(); // cek login
-          await authService.refresh(); // kalau profile berhasil, artinya login, baru refresh
+          await authService.profile();
+          await authService.refresh();
         } catch {
           console.log("User belum login, skip refresh");
         }

@@ -15,7 +15,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { authService } from "@/lib/services/auts";
+import { authService } from "@/lib/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
 interface AuthFormProps {

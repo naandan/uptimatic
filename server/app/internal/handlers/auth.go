@@ -16,9 +16,12 @@ type AuthHandler interface {
 	LoginHandler(c *gin.Context)
 	LogoutHandler(c *gin.Context)
 	RefreshHandler(c *gin.Context)
+	ProfileHandler(c *gin.Context)
 	VerifyHandler(c *gin.Context)
 	ResendVerificationHandler(c *gin.Context)
-	ProfileHandler(c *gin.Context)
+	ResendVerificationEmailTTLHandler(c *gin.Context)
+	SendPasswordResetEmailHandler(c *gin.Context)
+	ResetPasswordHandler(c *gin.Context)
 }
 
 type authHandler struct {
@@ -122,29 +125,6 @@ func (h *authHandler) RefreshHandler(c *gin.Context) {
 	})
 }
 
-func (h *authHandler) VerifyHandler(c *gin.Context) {
-	token := c.Query("token")
-	if err := h.authService.VerifyEmail(token); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
-		return
-	}
-	utils.SuccessResponse(c, nil)
-}
-
-func (h *authHandler) ResendVerificationHandler(c *gin.Context) {
-	userID := c.GetUint("user_id")
-	if userID == 0 {
-		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "User not authenticated")
-		return
-	}
-
-	if err := h.authService.ResendVerificationEmail(userID, h.cfg.AppDomain); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
-		return
-	}
-	utils.SuccessResponse(c, nil)
-}
-
 func (h *authHandler) ProfileHandler(c *gin.Context) {
 	userId, exists := c.Get("user_id")
 	if !exists {
@@ -165,4 +145,77 @@ func (h *authHandler) ProfileHandler(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, user)
+}
+
+func (h *authHandler) VerifyHandler(c *gin.Context) {
+	token := c.Query("token")
+	if err := h.authService.VerifyEmail(token); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		return
+	}
+	utils.SuccessResponse(c, nil)
+}
+
+func (h *authHandler) ResendVerificationHandler(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	if userID == 0 {
+		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "User not authenticated")
+		return
+	}
+
+	ttl, err := h.authService.ResendVerificationEmail(userID, h.cfg.AppDomain)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		return
+	}
+	utils.SuccessResponse(c, gin.H{"ttl": ttl})
+}
+
+func (h *authHandler) ResendVerificationEmailTTLHandler(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	if userID == 0 {
+		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "User not authenticated")
+		return
+	}
+
+	ttl, err := h.authService.ResendVerificationEmailTTL(userID)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		return
+	}
+	utils.SuccessResponse(c, gin.H{"ttl": ttl})
+}
+
+func (h *authHandler) SendPasswordResetEmailHandler(c *gin.Context) {
+	var req schema.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		return
+	}
+	if err := h.validate.Struct(req); err != nil {
+		utils.BindErrorResponse(c, err)
+		return
+	}
+	if err := h.authService.SendPasswordResetEmail(req.Email, h.cfg.AppDomain); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		return
+	}
+	utils.SuccessResponse(c, nil)
+}
+
+func (h *authHandler) ResetPasswordHandler(c *gin.Context) {
+	var req schema.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		return
+	}
+	if err := h.validate.Struct(req); err != nil {
+		utils.BindErrorResponse(c, err)
+		return
+	}
+	if err := h.authService.ResetPassword(req.Token, req.Password); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		return
+	}
+	utils.SuccessResponse(c, nil)
 }

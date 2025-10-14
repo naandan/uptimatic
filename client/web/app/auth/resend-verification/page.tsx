@@ -4,31 +4,38 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { authService } from "@/lib/services/auts";
+import { authService } from "@/lib/services/auth";
+import { toast } from "sonner";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
 
   const [countdown, setCountdown] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
 
-  // Jalankan countdown setiap detik
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
     return () => clearInterval(timer);
   }, [countdown]);
 
-  // Pastikan user sudah login sebelum bisa mengirim email verifikasi
   useEffect(() => {
     const checkLogin = async () => {
       try {
-        await authService.profile(); // Jika tidak login, akan error
+        setLoading(true);
+        await authService.profile();
+
+        const res = await authService.resendVerificationEmailTTL();
+        if (res.data.ttl > 0) {
+          setCountdown(res.data.ttl);
+          setHasStarted(true);
+        }
       } catch {
         router.replace("/auth/login");
-      }
+      }finally {
+        setLoading(false);
+      } 
     };
     checkLogin();
   }, [router]);
@@ -36,16 +43,23 @@ export default function VerifyEmailPage() {
   const handleSend = async () => {
     try {
       setLoading(true);
-      setMessage("");
       const res = await authService.resendVerificationEmail();
-      console.log(res);
-      setMessage("Email verifikasi telah dikirim.");
-      setCountdown(60);
+      toast.success("Email verifikasi telah dikirim.");
+      setCountdown(res.data.ttl);
       setHasStarted(true);
     } catch (err: any) {
-      setMessage(err.message || "Gagal mengirim email verifikasi.");
+      toast.error(err.message || "Gagal mengirim email verifikasi.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await authService.refresh();
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -75,17 +89,9 @@ export default function VerifyEmailPage() {
             : "Kirim Email Verifikasi"}
         </Button>
 
-        {message && (
-          <p
-            className={`text-sm mt-2 ${
-              message.toLowerCase().includes("gagal")
-                ? "text-red-500"
-                : "text-green-600"
-            }`}
-          >
-            {message}
-          </p>
-        )}
+        <Button onClick={handleRefresh} className="w-full">
+          Refresh
+        </Button>
       </div>
     </div>
   );

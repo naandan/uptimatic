@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
-import { authService } from "@/lib/services/auts";
+import { authService } from "@/lib/services/auth";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 

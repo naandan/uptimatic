@@ -13,3 +13,12 @@ type LoginRequest struct {
 type ResendVerificationEmailRequest struct {
 	Email string `json:"email" validate:"email,required"`
 }
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" validate:"email,required"`
+}
+
+type ResetPasswordRequest struct {
+	Token    string `json:"token" validate:"required"`
+	Password string `json:"password" validate:"min=6,required"`
+}

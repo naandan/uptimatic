@@ -48,9 +48,9 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/uptime", req.url));
   }
 
-  // --- Kalau sudah verified, tapi buka /auth/verify atau /auth/verify-success, arahkan ke uptime ---
-  if (verified && [verifyRoutes[0]].some((p) => pathname === p)) {
-    return NextResponse.redirect(new URL("/uptime", req.url));
+  // --- Kalau sudah verified, tapi buka /auth/verify atau /auth/resend-verification, arahkan ke /verify-success ---
+  if (verified && [verifyRoutes[0], resendRoute].some((p) => pathname === p)) {
+    return NextResponse.redirect(new URL("/auth/verify-success", req.url));
   }
 
   return NextResponse.next();

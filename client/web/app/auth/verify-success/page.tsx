@@ -10,7 +10,7 @@ export default function VerifySuccessPage() {
       <div className="bg-white p-8 rounded-2xl shadow-sm max-w-md w-full text-center border border-slate-200">
         <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
         <h1 className="text-xl font-semibold text-slate-800 mb-2">
-          Email Berhasil Diverifikasi!
+          Email Sudah Diverifikasi!
         </h1>
         <p className="text-slate-600 mb-6">
           Akun kamu sudah aktif dan siap digunakan.  

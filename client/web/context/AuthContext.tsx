@@ -1,6 +1,6 @@
 'use client';
 // context/AuthContext.tsx
-import { authService } from "@/lib/services/auts";
+import { authService } from "@/lib/services/auth";
 import { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
