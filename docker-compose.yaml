@@ -1,0 +1,30 @@
+
+services:
+  client:
+    image: uptimatic-client
+    container_name: uptimatic-client
+    ports:
+      - "3001:3000"
+    networks:
+      - uptimatic-network
+  
+  server:
+    image: uptimatic-server
+    container_name: uptimatic-server
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env
+    networks:
+      - uptimatic-network
+      - pgsql-network
+      - redis-network
+
+networks:
+  uptimatic-network:
+    name: uptimatic-network
+    driver: bridge
+  pgsql-network:
+    external: true
+  redis-network:
+    external: true

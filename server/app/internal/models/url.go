@@ -7,8 +7,12 @@ type URL struct {
 	UserID      uint       `gorm:"not null"`
 	Label       string     `gorm:"not null"`
 	URL         string     `gorm:"not null"`
-	LastChecked *time.Time `gorm:"not null"`
+	Interval    int        `gorm:"not null"`
+	Active      bool       `gorm:"not null"`
+	LastChecked *time.Time `gorm:"null"`
 	CreatedAt   time.Time  `gorm:"autoCreateTime"`
+
+	User User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type StatusLog struct {
@@ -17,4 +21,11 @@ type StatusLog struct {
 	Status       string    `gorm:"not null"`
 	ResponseTime int64     `gorm:"not null"`
 	CheckedAt    time.Time `gorm:"autoCreateTime"`
+}
+
+type UptimeStat struct {
+	BucketStart   time.Time `json:"bucket_start"`
+	TotalChecks   int       `json:"total_checks"`
+	UpChecks      int       `json:"up_checks"`
+	UptimePercent float64   `json:"uptime_percent"`
 }

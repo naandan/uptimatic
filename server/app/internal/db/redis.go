@@ -36,6 +36,13 @@ func NewAsynqServer(cfg *config.Config) *asynq.Server {
 	)
 }
 
+func NewAsynqScheduler(cfg *config.Config) *asynq.Scheduler {
+	return asynq.NewScheduler(
+		asynq.RedisClientOpt{Addr: cfg.RedisHost + ":" + fmt.Sprint(cfg.RedisPort)},
+		&asynq.SchedulerOpts{},
+	)
+}
+
 func RedisClientOpt(cfg *config.Config) asynq.RedisClientOpt {
 	return asynq.RedisClientOpt{Addr: cfg.RedisHost + ":" + fmt.Sprint(cfg.RedisPort)}
 }

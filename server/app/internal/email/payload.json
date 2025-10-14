@@ -16,5 +16,17 @@
             "Name": "Nandan",
             "VerificationLink": "https://example.com/verify?token=abc123xyz"
         }
+    },
+    "down":{
+        "to": "user@example.com",
+        "subject": "Service Down",
+        "type": "down",
+        "data": {
+            "Label": "Database",
+            "URL": "https://example.com/404",
+            "Status": 404,
+            "ResponseTime": 354,
+            "CheckedAt": "2023-01-01 00:00:00"
+        }
     }
 }

@@ -1,0 +1,2 @@
+ALTER TABLE status_logs
+ALTER COLUMN status TYPE VARCHAR;

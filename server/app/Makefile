@@ -19,3 +19,16 @@ migrate-reset: migrate-reset migrate-up
 # Buat file migration baru (contoh: make migrate-new name=create_table_xyz)
 migrate-new:
 	migrate create -ext sql -dir $(MIGRATIONS_PATH) -seq $(name)
+
+
+# Start Server
+server:
+	go run main.go server
+
+# Start Worker
+worker:
+	go run main.go worker
+
+# Start Scheduler
+scheduler:
+	go run main.go scheduler

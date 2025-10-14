@@ -20,12 +20,13 @@ func NewJWTUtil(secret string, accessTTL, refreshTTL time.Duration) JWTUtil {
 	}
 }
 
-func (j *JWTUtil) GenerateTokens(userID uint) (string, string, error) {
+func (j *JWTUtil) GenerateTokens(userID uint, verified bool) (string, string, error) {
 	now := time.Now()
 
 	accessClaims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     now.Add(j.AccessTTL).Unix(),
+		"user_id":  userID,
+		"verified": verified,
+		"exp":      now.Add(j.AccessTTL).Unix(),
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	access, err := accessToken.SignedString([]byte(j.Secret))
@@ -34,8 +35,9 @@ func (j *JWTUtil) GenerateTokens(userID uint) (string, string, error) {
 	}
 
 	refreshClaims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     now.Add(j.RefreshTTL).Unix(),
+		"user_id":  userID,
+		"verified": verified,
+		"exp":      now.Add(j.RefreshTTL).Unix(),
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	refresh, err := refreshToken.SignedString([]byte(j.Secret))
@@ -73,7 +75,16 @@ func (j *JWTUtil) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 func (j *JWTUtil) GenerateEmailVerificationToken(userID uint) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+		"exp":     time.Now().Add(2 * time.Hour).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(j.Secret))
+}
+
+func (j *JWTUtil) GeneratePasswordResetToken(userID uint) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"exp":     time.Now().Add(2 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(j.Secret))

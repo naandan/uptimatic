@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	TaskSendEmail = "send_email"
+	TaskSendEmail      = "send_email"
+	TaskValidateUptime = "validate_uptime"
+	TaskCheckUptime    = "check_uptime"
 )
 
 func EnqueueEmail(client *asynq.Client, to, subject string, mailType email.EmailType, data map[string]any) error {

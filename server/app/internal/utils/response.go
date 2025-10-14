@@ -14,11 +14,6 @@ const (
 	InvalidFormat   = "INVALID_FORMAT"
 	MinLength       = "MIN_LENGTH"
 	MaxLength       = "MAX_LENGTH"
-	MinValue        = "MIN_VALUE"
-	MaxValue        = "MAX_VALUE"
-	Unique          = "UNIQUE"
-	EnumValue       = "ENUM_VALUE"
-	Mismatch        = "MISMATCH"
 	ValidationError = "VALIDATION_ERROR"
 
 	NotFound = "NOT_FOUND"
@@ -26,39 +21,50 @@ const (
 	Unauthorized    = "UNAUTHORIZED"
 	InvalidToken    = "INVALID_TOKEN"
 	ForbiddenAction = "FORBIDDEN_ACTION"
-	AccountLocked   = "ACCOUNT_LOCKED"
-	TooManyRequests = "TOO_MANY_REQUESTS"
 
-	InternalError      = "INTERNAL_ERROR"
-	ServiceUnavailable = "SERVICE_UNAVAILABLE"
-	Timeout            = "TIMEOUT"
-	Conflict           = "CONFLICT"
+	InternalError = "INTERNAL_ERROR"
+	Conflict      = "CONFLICT"
 )
 
 func SuccessResponse(c *gin.Context, data any) {
-	requestID := getRequestID(c)
 	c.JSON(http.StatusOK, gin.H{
-		"request_id": requestID,
+		"request_id": getRequestID(c),
+		"status":     "success",
 		"data":       data,
 	})
 }
 
+func PaginatedResponse(c *gin.Context, data any, count, limit, page, totalPage int) {
+	c.JSON(http.StatusOK, gin.H{
+		"request_id": getRequestID(c),
+		"status":     "success",
+		"data":       data,
+		"meta": gin.H{
+			"total":      count,
+			"limit":      limit,
+			"page":       page,
+			"total_page": totalPage,
+		},
+	})
+}
+
 func ErrorResponse(c *gin.Context, status int, code, message string) {
-	requestID := getRequestID(c)
 	c.JSON(status, gin.H{
-		"request_id": requestID,
+		"request_id": getRequestID(c),
+		"status":     "error",
 		"error": gin.H{
-			"message": message,
 			"code":    code,
+			"message": message,
 		},
 	})
 }
 
 func BindErrorResponse(c *gin.Context, err error) {
 	requestID := getRequestID(c)
-	errors := make(map[string][]string)
 
 	if verrs, ok := err.(validator.ValidationErrors); ok {
+		errors := make(map[string][]string)
+
 		for _, e := range verrs {
 			field := e.Field()
 			switch e.Tag() {
@@ -74,11 +80,13 @@ func BindErrorResponse(c *gin.Context, err error) {
 				errors[field] = append(errors[field], InvalidType)
 			}
 		}
+
 		c.JSON(http.StatusBadRequest, gin.H{
 			"request_id": requestID,
+			"status":     "error",
 			"error": gin.H{
-				"message": "Payload Validation Failed",
 				"code":    ValidationError,
+				"message": "Payload validation failed",
 				"fields":  errors,
 			},
 		})
@@ -89,9 +97,10 @@ func BindErrorResponse(c *gin.Context, err error) {
 }
 
 func getRequestID(c *gin.Context) string {
-	reqID, exists := c.Get("request_id")
-	if !exists {
-		return uuid.New().String()
+	if reqID, exists := c.Get("request_id"); exists {
+		if idStr, ok := reqID.(string); ok {
+			return idStr
+		}
 	}
-	return reqID.(string)
+	return uuid.New().String()
 }
