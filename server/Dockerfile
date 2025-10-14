@@ -21,7 +21,7 @@ COPY --from=builder /app/uptimatic /app/uptimatic
 
 # Copy s6 service folder
 COPY s6 /etc/services.d
-COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /
 
 # Create log folders
 RUN mkdir -p /var/log/server /var/log/worker /var/log/scheduler \
