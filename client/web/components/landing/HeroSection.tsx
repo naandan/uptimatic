@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export const HeroSection = () => {
   return (
-    <section className="pt-32 pb-24 text-center bg-gradient-to-b from-slate-50 to-white">
+    <section className="pt-36 pb-28 text-center bg-gradient-to-b from-slate-50 to-white">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

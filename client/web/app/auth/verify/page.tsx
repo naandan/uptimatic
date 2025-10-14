@@ -1,25 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/lib/services/auth";
-import { useAuth } from "@/context/AuthContext";
 
-export default function VerifyEmailPage() {
+function VerifyEmailForm(){
+
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
-
+  
   const [message, setMessage] = useState("Memverifikasi email kamu...");
   const [isError, setIsError] = useState(false);
-
+  
   useEffect(() => {
     if (!token) {
       router.replace("/auth/login");
       return;
     }
-
+  
     const verify = async () => {
       try {
         await authService.verify(token);
@@ -27,7 +27,6 @@ export default function VerifyEmailPage() {
           await authService.profile();
           await authService.refresh();
         } catch {
-          console.log("User belum login, skip refresh");
         }
         router.replace("/auth/verify-success");
       } catch (err) {
@@ -36,10 +35,10 @@ export default function VerifyEmailPage() {
         setMessage("Token tidak valid atau sudah kedaluwarsa.");
       }
     };
-
+  
     verify();
   }, [token, router]);
-
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-sm max-w-md w-full text-center border border-slate-200">
@@ -56,5 +55,13 @@ export default function VerifyEmailPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyEmailForm />
+    </Suspense>
   );
 }

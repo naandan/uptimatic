@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export const CTASection = () => {
   return (
-    <section className="py-24 bg-gradient-to-r from-primary/90 to-primary text-white text-center">
+    <section className="py-16 bg-gradient-to-r from-primary/90 to-primary text-white text-center">
       <div className="max-w-2xl mx-auto px-6">
         <h2 className="text-3xl font-semibold mb-4">
           Siap menjaga uptime Anda?

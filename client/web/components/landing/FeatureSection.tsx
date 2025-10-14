@@ -27,7 +27,7 @@ const features = [
 
 export const FeaturesSection = () => {
   return (
-    <section id="features" className="py-24 bg-white">
+    <section id="features" className="py-28 bg-white">
       <div className="max-w-5xl mx-auto px-6 text-center">
         <h2 className="text-3xl font-semibold text-slate-800 mb-4">
           Fitur Utama Uptimatic

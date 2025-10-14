@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,46 +8,42 @@ import { Lock } from "lucide-react";
 import { authService } from "@/lib/services/auth";
 import { toast } from "sonner";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm(){
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get("token");
-
+  const router = useRouter();
+  
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-
+  
   useEffect(() => {
     if (!token) {
       toast.error("Token tidak valid atau tidak tersedia.");
     }
   }, [token]);
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess(false);
-
+  
     if (!token) return;
     if (password !== confirmPassword) {
       toast.error("Password dan konfirmasi password tidak cocok.");
       return;
     }
-
+  
     setLoading(true);
     try {
       await authService.resetPassword(token, password);
       toast.success("Password berhasil diubah. Silakan login dengan password baru.");
       router.replace("/auth/reset-success");
-      setSuccess(true);
     } catch (err: any) {
       toast.error(err.message||"Terjadi kesalahan. Silakan coba lagi.");
-      setSuccess(false);
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-sm max-w-md w-full text-center border border-slate-200">
@@ -58,7 +54,7 @@ export default function ResetPasswordPage() {
         <p className="text-slate-600 mb-4">
           Masukkan password baru kamu di bawah ini.
         </p>
-
+  
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
             type="password"
@@ -74,7 +70,7 @@ export default function ResetPasswordPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
-
+  
           <Button type="submit" disabled={loading || !token} className="w-full">
             {loading ? "Memproses..." : "Reset Password"}
           </Button>
@@ -82,4 +78,12 @@ export default function ResetPasswordPage() {
       </div>
     </div>
   );
+}
+
+export default function ResetPasswordPage() {
+  return (
+     <Suspense fallback={<div>Loading...</div>}>
+       <ResetPasswordForm />
+     </Suspense>
+  )
 }
