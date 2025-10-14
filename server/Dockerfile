@@ -20,8 +20,8 @@ RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / && rm /tmp/s6-overlay-amd64.tar.gz
 COPY --from=builder /app/uptimatic /app/uptimatic
 
 # Copy s6 service folder
-COPY docker/s6 /etc/services.d
-COPY docker/entrypoint.sh /entrypoint.sh
+COPY s6 /etc/services.d
+COPY entrypoint.sh /entrypoint.sh
 
 # Create log folders
 RUN mkdir -p /var/log/server /var/log/worker /var/log/scheduler \
