@@ -60,7 +60,7 @@ func (s *authService) Register(userEmail, password string, appUrl string) (*mode
 		return nil, err
 	}
 
-	link := fmt.Sprintf("%s/api/v1/auth/verify?token=%s", appUrl, token)
+	link := fmt.Sprintf("%s/auth/verify?token=%s", appUrl, token)
 	tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"Name": userEmail, "VerificationLink": link})
 
 	if err := s.redis.Set(context.Background(), utils.GetEmailVerificationTokenKey(userEmail), user.ID, 60*time.Second).Err(); err != nil {
