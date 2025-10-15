@@ -1,5 +1,4 @@
 'use client';
-// context/AuthContext.tsx
 import { authService } from "@/lib/services/auth";
 import { createContext, useContext, useState, useEffect } from "react";
 
@@ -15,12 +14,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getProfile = async () => {
-      try{
-        await authService.profile();
-        setIsLoggedIn(true);
-      }catch(err){
-        console.error(err);
+      const res = await authService.profile();
+      if (!res.success) {
         setIsLoggedIn(false);
+        return;
+      } else {
+        setIsLoggedIn(true);
       }
     }
     getProfile();

@@ -18,6 +18,9 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/services/auth";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { getErrorMessage, getValidationErrors } from "@/utils/helper";
+import { ErrorInput } from "@/types/response";
+import ErrorInputMessage from "./ErrorInputMessage";
 
 interface AuthFormProps {
   type: "login" | "register";
@@ -31,31 +34,33 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<ErrorInput[]>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     if (type === "register") {
-      try {
-        await authService.register(payload);
-        router.push("/auth/login");
-      } catch (err) {
-        console.error(err);
-      }finally {
-        setLoading(false);
+      const res = await authService.register(payload);
+      if (!res.success) {
+        if (res.error?.code === "VALIDATION_ERROR") {
+          const details = getValidationErrors(res.error.fields);
+          setErrors(details);
+          toast.error(getErrorMessage(res.error?.code || ""));
+        } else {
+          toast.error(getErrorMessage(res.error?.code || ""));
+        }
       }
+      setLoading(false);
     }else{
-      try {
-        await authService.login(payload)
+      const res = await authService.login(payload);
+      if (!res.success) {
+        toast.error(getErrorMessage(res.error?.code || ""));
+      }else{
         toast.success("Login berhasil");
         setLoggedIn(true);
         router.push("/uptime");
-      } catch (err) {
-        toast.error("Email atau kata sandi salah");
-        console.error(err);
-      }finally {
-        setLoading(false);
       }
+      setLoading(false);
     }
   };
 
@@ -94,6 +99,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                   }
                   required
                 />
+                <ErrorInputMessage errors={errors} field="email" />
               </div>
 
               <div className="space-y-2">
@@ -109,6 +115,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                   }
                   required
                 />
+                <ErrorInputMessage errors={errors} field="password" />
                 <div className="flex items-center justify-end">
                 {type === "login" && (
                         <Link

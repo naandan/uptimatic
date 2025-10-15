@@ -1,4 +1,10 @@
-export type URL = {
+export type URLRequest = {
+  label: string;
+  url: string;
+  active: boolean;
+};
+
+export type URLResponse = {
     id: number;
     label: string;
     url: string;
@@ -8,7 +14,7 @@ export type URL = {
     created_at: string;
 };
 
-export type Stats = {
+export type URLStats = {
     bucket_start: string;
     total_checks: number;
     up_checks: number;

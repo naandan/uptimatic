@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Mail } from "lucide-react";
 import { authService } from "@/lib/services/auth";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/helper";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -16,17 +17,16 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     setSuccess(false);
-
-    try {
-      await authService.forgotPassword(email);
+    
+    const res = await authService.forgotPassword(email);
+    if (!res.success) {
+      toast.error(getErrorMessage(res.error?.code || ""));
+      setSuccess(false);
+    } else {
       toast.success("Link reset password telah dikirim ke email kamu.");
       setSuccess(true);
-    } catch (err: any) {
-      toast.error(err.message || "Gagal mengirim email reset password.");
-      setSuccess(false);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (

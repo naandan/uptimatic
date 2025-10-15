@@ -6,6 +6,7 @@ import { Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/services/auth";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/helper";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -22,44 +23,45 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     const checkLogin = async () => {
-      try {
-        setLoading(true);
-        await authService.profile();
-
-        const res = await authService.resendVerificationEmailTTL();
-        if (res.data.ttl > 0) {
+      setLoading(true);
+      await authService.profile();
+      const res = await authService.resendVerificationEmailTTL();
+      if (!res.success) {
+        toast.error(getErrorMessage(res.error?.code || ""));
+        router.replace("/auth/login");
+      } else {
+        if (res.data?.ttl && res.data.ttl > 0) {
           setCountdown(res.data.ttl);
           setHasStarted(true);
         }
-      } catch {
-        router.replace("/auth/login");
-      }finally {
-        setLoading(false);
-      } 
+      }
+      setLoading(false);
     };
     checkLogin();
   }, [router]);
 
   const handleSend = async () => {
-    try {
-      setLoading(true);
-      const res = await authService.resendVerificationEmail();
-      toast.success("Email verifikasi telah dikirim.");
-      setCountdown(res.data.ttl);
-      setHasStarted(true);
-    } catch (err: any) {
-      toast.error(err.message || "Gagal mengirim email verifikasi.");
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const res = await authService.resendVerificationEmail();
+    toast.success("Email verifikasi telah dikirim.");
+    if (!res.success) {
+      toast.error(getErrorMessage(res.error?.code || ""));
+    } else {
+      if (res.data?.ttl && res.data.ttl > 0) {
+        setCountdown(res.data.ttl);
+        setHasStarted(true);
+      }
     }
+    setLoading(false);
   };
 
   const handleRefresh = async () => {
-    try {
-      await authService.refresh();
+    const res = await authService.refresh();
+    if (!res.success) {
+      toast.error(getErrorMessage(res.error?.code || ""));
+      router.replace("/auth/login");
+    } else {
       window.location.reload();
-    } catch (err) {
-      console.error(err);
     }
   };
 

@@ -49,7 +49,7 @@ func (h *authHandler) RegisterHandler(c *gin.Context) {
 
 	user, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, h.cfg.AppDomain)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, http.StatusConflict, utils.Conflict, err.Error())
 		return
 	}
 

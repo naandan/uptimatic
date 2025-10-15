@@ -34,15 +34,14 @@ export default function UptimeStats() {
 
   const fetchData = async () => {
     setLoading(true);
-    try {
-      const res = await urlService.stats(idNumber, mode, offset);
+    const res = await urlService.stats(idNumber, mode, offset);
+    if (res.success) {
       setData(res.data || []);
-    } catch (err) {
-      console.error(err);
+    } else {
+      console.error(res.error);
       setData([]);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
