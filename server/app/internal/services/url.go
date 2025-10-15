@@ -141,14 +141,6 @@ func (s *urlService) GetUptimeStats(ctx context.Context, urlID uint, mode string
 		return nil, fmt.Errorf("invalid mode: %s", mode)
 	}
 
-	// if _, err := s.urlRepo.(s.db, urlID); err != nil {
-	// 	// return nil, err
-	// 	if errors.Is(err, gorm.ErrRecordNotFound) {
-	// 		return []models.UptimeStat{}, nil
-	// 	}
-	// 	return nil, err
-	// }
-
 	logs, err := s.statusLogRepo.GetUptimeStats(ctx, s.db, urlID, mode, targetDate.UTC())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

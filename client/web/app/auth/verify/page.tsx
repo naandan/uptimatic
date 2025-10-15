@@ -21,18 +21,18 @@ function VerifyEmailForm(){
     }
   
     const verify = async () => {
-      try {
-        await authService.verify(token);
-        try {
-          await authService.profile();
-          await authService.refresh();
-        } catch {
-        }
-        router.replace("/auth/verify-success");
-      } catch (err) {
-        console.error("Verifikasi gagal:", err);
+      const res = await authService.verify(token);
+      if (!res.success) {
+        console.error("Verifikasi gagal:", res.error);
         setIsError(true);
         setMessage("Token tidak valid atau sudah kedaluwarsa.");
+        return;
+      } else {
+        const res = await authService.profile();
+        if (res.success){
+          await authService.refresh();
+        }
+        router.replace("/auth/verify-success");
       }
     };
   

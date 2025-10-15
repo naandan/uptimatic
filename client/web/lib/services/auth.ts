@@ -1,59 +1,45 @@
+import { AuthRequest, TokenResponse, TTLResponse, UserResponse } from "@/types/auth";
 import api from "../api";
-
-
-type AuthRequest = {
-    email: string;
-    password: string;
-}
+import { ApiResponse } from "@/types/response";
 
 export const authService = {
-    register: async (data: AuthRequest) => {
-        const res = await api.post("/auth/register", data);
-        return res.data;
+    register: async (data: AuthRequest): Promise<ApiResponse<UserResponse>> => {
+        return await api.post("/auth/register", data);
     },
 
-    login: async (data: AuthRequest) => {
-        const res = await api.post("/auth/login", data);
-        return res.data;
+    login: async (data: AuthRequest): Promise<ApiResponse<TokenResponse>> => {
+        return await api.post("/auth/login", data);
     },
 
-    logout: async () => {
-        const res = await api.post("/auth/logout");
-        return res.data;
+    logout: async (): Promise<ApiResponse<null>> => {
+        return await api.post("/auth/logout");
     },
 
-    refresh: async () => {
-        const res = await api.post("/auth/refresh");
-        return res.data;
+    refresh: async (): Promise<ApiResponse<TokenResponse>> => {
+        return await api.post("/auth/refresh");
     },
 
-    profile: async () => {
-        const res = await api.get("/profile");
-        return res.data;
+    profile: async (): Promise<ApiResponse<UserResponse>>  => {
+        return await api.get("/profile");
     },
 
-    verify: async (token: string) => {
-        const res = await api.get(`/auth/verify?token=${token}`);
-        return res.data;
+    verify: async (token: string): Promise<ApiResponse<null>> => {
+        return await api.get(`/auth/verify?token=${token}`);
     },
 
-    resendVerificationEmail: async () => {
-        const res = await api.post(`/auth/resend-verification`);
-        return res.data;
+    resendVerificationEmail: async (): Promise<ApiResponse<TTLResponse>> => {
+        return await api.post(`/auth/resend-verification`);
     },
 
-    resendVerificationEmailTTL: async () => {
-        const res = await api.get(`/auth/resend-verification-ttl`);
-        return res.data;
+    resendVerificationEmailTTL: async (): Promise<ApiResponse<TTLResponse>> => {
+        return await api.get(`/auth/resend-verification-ttl`);
     },
 
-    forgotPassword: async (email: string) => {
-        const res = await api.post(`/auth/forgot-password`, { email });
-        return res.data;
+    forgotPassword: async (email: string): Promise<ApiResponse<null>> => {
+        return await api.post(`/auth/forgot-password`, { email });
     },
 
-    resetPassword: async (token: string, password: string) => {
-        const res = await api.post(`/auth/reset-password`, { token, password });
-        return res.data;
+    resetPassword: async (token: string, password: string): Promise<ApiResponse<null>> => {
+        return await api.post(`/auth/reset-password`, { token, password });
     },
 };

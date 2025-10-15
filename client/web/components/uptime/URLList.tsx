@@ -9,7 +9,7 @@ import useURLQueryParams from "@/hooks/useURLQueryParams";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
-import { URL } from "@/types/uptime";
+import { URL } from "@/types/url";
 import { URLRequest, urlService } from "@/lib/services/url";
 import { toast } from "sonner";
 

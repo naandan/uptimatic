@@ -13,13 +13,10 @@ export default function HeaderProfile() {
   
 
   const handleLogout = async () => {
-    try{
-      await authService.logout();
-      setLoggedIn(false);
-      router.push("/auth/login");
-    }catch(err){
-      console.error(err);
-    }
+    const res = await authService.logout();
+    if (!res.success) return;
+    setLoggedIn(false);
+    router.push("/auth/login");
   };
 
   if (!isLoggedIn) return null;

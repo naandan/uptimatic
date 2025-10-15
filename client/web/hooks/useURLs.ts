@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import type { URL } from "@/types/uptime";
+import type { URLResponse } from "@/types/url";
 import { urlService } from "@/lib/services/url";
 
 export function useURLs({ query, filter, sortBy, page }: any) {
-  const [urls, setUrls] = useState<URL[]>([]);
+  const [urls, setUrls] = useState<URLResponse[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -15,9 +15,9 @@ export function useURLs({ query, filter, sortBy, page }: any) {
     if (sortBy) params.set("sort", sortBy);
     if (page) params.set("page", page.toString());
 
-    urlService.list(params.toString()).then((data) => {
-      setUrls(data.data);
-      setTotalPages(data.meta.total_page);
+    urlService.list(params.toString()).then((res) => {
+      setUrls(res.data || []);
+      setTotalPages(res.meta?.total_page || 1);
       setLoading(false);
     })
 

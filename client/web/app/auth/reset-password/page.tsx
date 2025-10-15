@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import { authService } from "@/lib/services/auth";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/helper";
 
 function ResetPasswordForm(){
   const searchParams = useSearchParams();
@@ -33,13 +34,14 @@ function ResetPasswordForm(){
     }
   
     setLoading(true);
-    try {
-      await authService.resetPassword(token, password);
+    const res = await authService.resetPassword(token, password);
+    if (!res.success) {
+      toast.error(getErrorMessage(res.error?.code || ""));
+      setLoading(false);
+      return;
+    } else {
       toast.success("Password berhasil diubah. Silakan login dengan password baru.");
       router.replace("/auth/reset-success");
-    } catch (err: any) {
-      toast.error(err.message||"Terjadi kesalahan. Silakan coba lagi.");
-    } finally {
       setLoading(false);
     }
   };

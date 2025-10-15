@@ -17,7 +17,6 @@ func VerifiedMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Deteksi tipe claims dari JWT library
 		var verified bool
 		switch v := claimsVal.(type) {
 		case jwt.MapClaims:
@@ -34,7 +33,6 @@ func VerifiedMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Cek status verified
 		if !verified {
 			utils.ErrorResponse(c, http.StatusForbidden, utils.ForbiddenAction, "Email not verified")
 			c.Abort()

@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { URL } from "@/types/uptime";
+import { URL } from "@/types/url";
 import { formatTimeGMT7 } from "@/utils/format";
 import { Globe, Trash2, Edit2 } from "lucide-react";
 import { useRouter } from "next/navigation";
