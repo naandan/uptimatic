@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,50 +14,27 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { URLResponse } from "@/types/url";
 import { ErrorInput } from "@/types/response";
+import ErrorInputMessage from "../ErrorInputMessage";
 
 interface AddEditDialogProps {
   mode: "add" | "edit";
   open: boolean;
-  initialData?: Partial<URLResponse>;
+  initialData: Partial<URLResponse>;
+  onInputChange: Dispatch<SetStateAction<Partial<URLResponse>>>
+  onSave: () => void;
+  errors: ErrorInput[];
   onClose: () => void;
-  onSave: (data: Omit<URLResponse, "id" | "last_checked" | "created_at">) => void;
 }
 
 export function AddEditDialog({
   mode,
   open,
   initialData,
-  onClose,
+  onInputChange,
   onSave,
+  errors,
+  onClose,
 }: AddEditDialogProps) {
-  const [form, setForm] = useState({
-    label: initialData?.label || "",
-    url: initialData?.url || "",
-    interval: initialData?.interval || 5,
-    active: initialData?.active ?? true,
-  });
-
-  const [errors, setErrors] = useState<ErrorInput[]>();
-
-  const handleSubmit = () => {
-    if (!form.label.trim() || !form.url.trim()) return;
-    onSave({
-      label: form.label.trim(),
-      url: form.url.trim(),
-      interval: Number(form.interval),
-      active: form.active,
-    });
-
-    setTimeout(() => {
-      setForm({
-        label: "",
-        url: "",
-        interval: 5,
-        active: true,
-      });
-    }, 2000);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -73,9 +50,10 @@ export function AddEditDialog({
             <Input
               id="label"
               placeholder="Contoh: Homepage"
-              value={form.label}
-              onChange={(e) => setForm({ ...form, label: e.target.value })}
+              value={initialData.label}
+              onChange={(e) => onInputChange({ ...initialData, label: e.target.value })}
             />
+            <ErrorInputMessage errors={errors} field="label" /> 
           </div>
 
           <div className="space-y-2">
@@ -84,9 +62,10 @@ export function AddEditDialog({
               id="url"
               type="url"
               placeholder="https://www.example.com"
-              value={form.url}
-              onChange={(e) => setForm({ ...form, url: e.target.value })}
+              value={initialData.url}
+              onChange={(e) => onInputChange({ ...initialData, url: e.target.value })}
             />
+            <ErrorInputMessage errors={errors} field="url" />
           </div>
 
           {/* <div className="space-y-2">
@@ -105,19 +84,20 @@ export function AddEditDialog({
           <div className="flex items-center justify-between">
             <Label>Aktif</Label>
             <Switch
-              checked={form.active}
+              checked={initialData.active}
               onCheckedChange={(checked) =>
-                setForm({ ...form, active: checked?? false })
+                onInputChange({ ...initialData, active: checked?? false })
               }
             />
           </div>
+          <ErrorInputMessage errors={errors} field="active" />
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Batal
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={onSave}>
             {mode === "add" ? "Tambah" : "Simpan"}
           </Button>
         </DialogFooter>

@@ -9,25 +9,39 @@ import useURLQueryParams from "@/hooks/useURLQueryParams";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
-import { URLRequest, URLResponse } from "@/types/url";
+import { URLResponse } from "@/types/url";
 import { urlService } from "@/lib/services/url";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/utils/helper";
+import { getErrorMessage, getValidationErrors } from "@/utils/helper";
+import { ErrorInput } from "@/types/response";
 
 export default function URLList() {
-  const { query, setQuery, filter, setFilter, sortBy, setSortBy, page, setPage } =
-    useURLQueryParams();
-
+  const { query, setQuery, filter, setFilter, sortBy, setSortBy, page, setPage } = useURLQueryParams();
   const { urls, totalPages, loading, setUrls } = useURLs({ query, filter, sortBy, page });
 
+  const initial = {
+    label: "",
+    url: "",
+    interval: 0,
+    active: true,
+  }
   const [openAdd, setOpenAdd] = useState(false);
-  const [editData, setEditData] = useState<URLResponse | null>(null);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [payload, setPayload] = useState<Partial<URLResponse>>(initial);
   const [deleteData, setDeleteData] = useState<URLResponse | null>(null);
+  const [errors, setErrors] = useState<ErrorInput[]>([]);
 
-  const handleAdd = async (data: URLRequest) => {
-    const res = await urlService.create(data)
+  const handleAdd = async () => {
+    const res = await urlService.create(payload)
+    console.log(payload)
     if (!res.success) {
-      toast.error(getErrorMessage(res.error?.code || ""));
+      if (res.error?.code === "VALIDATION_ERROR") {
+        const details = getValidationErrors(res.error.fields);
+        setErrors(details);
+        toast.error(getErrorMessage(res.error?.code || ""));
+      } else {
+        toast.error(getErrorMessage(res.error?.code || ""));
+      }
     } else {
       if (!res.data) return;
       setUrls([...urls, res.data]);
@@ -35,17 +49,24 @@ export default function URLList() {
       toast.success("URL berhasil ditambahkan");  
     }
   };
-  const handleEdit = async (data: URLRequest) => {
-    if (!editData) return;
+  const handleEdit = async () => {
+    if (!payload) return;
 
-    const res = await urlService.update(editData.id, data)
+    const res = await urlService.update(payload.id, payload)
     if (!res.success) {
-      toast.error(getErrorMessage(res.error?.code || ""));
+      if (res.error?.code === "VALIDATION_ERROR") {
+        const details = getValidationErrors(res.error.fields);
+        setErrors(details);
+        toast.error(getErrorMessage(res.error?.code || ""));
+      } else {
+        toast.error(getErrorMessage(res.error?.code || ""));
+      }
     } else {
       console.log(res);
       if (!res.data) return;
       const data = res.data;
-      setEditData(null);
+      setPayload(initial);
+      setOpenEdit(false);
       setUrls(urls.map((url) => (url.id === data.id ? data : url)));
       toast.success("URL berhasil diperbarui");
     }
@@ -104,7 +125,11 @@ export default function URLList() {
             </SelectContent>
           </Select>
 
-          <Button onClick={() => setOpenAdd(true)} className="flex items-center gap-2">
+          <Button onClick={() => {
+            setErrors([])
+            setOpenAdd(true);
+            setPayload(initial);
+          }} className="flex items-center gap-2">
             <PlusCircle /> Tambah URL
           </Button>
         </div>
@@ -122,7 +147,10 @@ export default function URLList() {
               key={url.id}
               data={url}
               onDelete={() => setDeleteData(url)}
-              onEdit={() => setEditData(url)}
+              onEdit={() => {
+                setPayload(url);
+                setOpenEdit(true)
+              }}
               onToggle={(id) => handleToggle(id)}
             />
           ))}
@@ -144,9 +172,33 @@ export default function URLList() {
       )}
 
       {/* Dialogs */}
-      <AddEditDialog open={openAdd} mode="add" onClose={() => setOpenAdd(false)} onSave={handleAdd} />
-      {editData && <AddEditDialog open={!!editData} mode="edit" initialData={editData} onClose={() => setEditData(null)} onSave={handleEdit} />}
-      {deleteData && <DeleteDialog open={!!deleteData} targetLabel={deleteData.label} onClose={() => setDeleteData(null)} onConfirm={() => handleDelete(deleteData.id)} />}
+      {openAdd && <AddEditDialog 
+        mode="add"
+        open={openAdd}
+        onClose={() => setOpenAdd(false)}
+        initialData={payload}
+        onInputChange={setPayload}
+        onSave={handleAdd} 
+        errors={errors}
+      />}
+      {openEdit && <AddEditDialog 
+        mode="edit"
+        open={openEdit}
+        onClose={() => {
+          setErrors([])
+          setOpenEdit(false);
+        }}
+        initialData={payload}
+        onInputChange={setPayload}
+        onSave={handleEdit}
+        errors={errors}
+      />}
+      {deleteData && <DeleteDialog
+        open={!!deleteData}
+        targetLabel={deleteData.label}
+        onClose={() => setDeleteData(null)}
+        onConfirm={() => handleDelete(deleteData.id)}
+      />}
     </div>
 
   );
