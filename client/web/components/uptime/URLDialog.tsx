@@ -12,14 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { URL } from "@/types/url";
+import { URLResponse } from "@/types/url";
+import { ErrorInput } from "@/types/response";
 
 interface AddEditDialogProps {
   mode: "add" | "edit";
   open: boolean;
-  initialData?: Partial<URL>;
+  initialData?: Partial<URLResponse>;
   onClose: () => void;
-  onSave: (data: Omit<URL, "id" | "last_checked" | "created_at">) => void;
+  onSave: (data: Omit<URLResponse, "id" | "last_checked" | "created_at">) => void;
 }
 
 export function AddEditDialog({
@@ -36,6 +37,8 @@ export function AddEditDialog({
     active: initialData?.active ?? true,
   });
 
+  const [errors, setErrors] = useState<ErrorInput[]>();
+
   const handleSubmit = () => {
     if (!form.label.trim() || !form.url.trim()) return;
     onSave({
@@ -45,12 +48,14 @@ export function AddEditDialog({
       active: form.active,
     });
 
-    setForm({
-      label: "",
-      url: "",
-      interval: 5,
-      active: true,
-    });
+    setTimeout(() => {
+      setForm({
+        label: "",
+        url: "",
+        interval: 5,
+        active: true,
+      });
+    }, 2000);
   };
 
   return (

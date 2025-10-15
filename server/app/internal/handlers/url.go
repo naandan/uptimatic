@@ -73,7 +73,8 @@ func (h *urlHandler) UpdateHandler(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, urlResponse)
+
+	utils.SuccessResponse(c, urlResponse)
 }
 
 func (h *urlHandler) DeleteHandler(c *gin.Context) {

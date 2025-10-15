@@ -9,9 +9,10 @@ import useURLQueryParams from "@/hooks/useURLQueryParams";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
-import { URL } from "@/types/url";
-import { URLRequest, urlService } from "@/lib/services/url";
+import { URLRequest, URLResponse } from "@/types/url";
+import { urlService } from "@/lib/services/url";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/helper";
 
 export default function URLList() {
   const { query, setQuery, filter, setFilter, sortBy, setSortBy, page, setPage } =
@@ -20,54 +21,58 @@ export default function URLList() {
   const { urls, totalPages, loading, setUrls } = useURLs({ query, filter, sortBy, page });
 
   const [openAdd, setOpenAdd] = useState(false);
-  const [editData, setEditData] = useState<URL | null>(null);
-  const [deleteData, setDeleteData] = useState<URL | null>(null);
+  const [editData, setEditData] = useState<URLResponse | null>(null);
+  const [deleteData, setDeleteData] = useState<URLResponse | null>(null);
 
-  const handleAdd = (data: URLRequest) => {
-    urlService.create(data)
-    .then((res) => {
+  const handleAdd = async (data: URLRequest) => {
+    const res = await urlService.create(data)
+    if (!res.success) {
+      toast.error(getErrorMessage(res.error?.code || ""));
+    } else {
+      if (!res.data) return;
       setUrls([...urls, res.data]);
       setOpenAdd(false);
-      toast.success("URL berhasil ditambahkan");
-    })
-    .catch((err) => {
-      console.error(err);
-      toast.error(err.response.data.message);
-    });
+      toast.success("URL berhasil ditambahkan");  
+    }
   };
-  const handleEdit = (data: URLRequest) => {
+  const handleEdit = async (data: URLRequest) => {
     if (!editData) return;
-    urlService.update(editData.id, data)
-    .then((res) => {
+
+    const res = await urlService.update(editData.id, data)
+    if (!res.success) {
+      toast.error(getErrorMessage(res.error?.code || ""));
+    } else {
+      console.log(res);
+      if (!res.data) return;
+      const data = res.data;
       setEditData(null);
-      setUrls(urls.map((url) => (url.id === res.id ? res : url)));
+      setUrls(urls.map((url) => (url.id === data.id ? data : url)));
       toast.success("URL berhasil diperbarui");
-    })
-    .catch((err) => {
-      console.error(err);
-      toast.error(err.response.data.message);
-    });
+    }
   };
-  const handleDelete = (id: number) => {
-    urlService.delete(id)
-    .then(() => {
+  const handleDelete = async (id: number) => {
+    const res = await urlService.delete(id)
+    if (!res.success) {
+      toast.error(getErrorMessage(res.error?.code || ""));
+    } else {
       setUrls(urls.filter((url) => url.id !== id));
       toast.success("URL berhasil dihapus");
-    })
-    .catch((err) => {
-      console.error(err);
-      toast.error(err.response.data.message);
-    });
+    }
     setDeleteData(null);
   };
 
-  const handleToggle = (id: number) => {
+  const handleToggle = async (id: number) => {
     if (!urls) return;
     let url = urls.find((url) => url.id === id);
     if (!url) return;
 
-    urlService.update(id, { active: !url.active, label: url.label, url: url.url });
-    setUrls(urls.map((url) => (url.id === id ? { ...url, active: !url.active } : url)));
+    const res = await urlService.update(id, { active: !url.active, label: url.label, url: url.url });
+    if (!res.success) {
+      toast.error(getErrorMessage(res.error?.code || ""));
+    } else {
+      toast.success("URL berhasil diperbarui");
+      setUrls(urls.map((url) => (url.id === id ? { ...url, active: !url.active } : url)));
+    }
   }
 
   return (
@@ -112,7 +117,7 @@ export default function URLList() {
         <p className="text-center text-slate-500 mt-6">Tidak ada data</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-          {urls.map((url: URL) => (
+          {urls.map((url: URLResponse) => (
             <URLCard
               key={url.id}
               data={url}
