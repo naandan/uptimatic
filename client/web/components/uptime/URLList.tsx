@@ -33,7 +33,6 @@ export default function URLList() {
 
   const handleAdd = async () => {
     const res = await urlService.create(payload)
-    console.log(payload)
     if (!res.success) {
       if (res.error?.code === "VALIDATION_ERROR") {
         const details = getValidationErrors(res.error.fields);
@@ -62,7 +61,6 @@ export default function URLList() {
         toast.error(getErrorMessage(res.error?.code || ""));
       }
     } else {
-      console.log(res);
       if (!res.data) return;
       const data = res.data;
       setPayload(initial);
@@ -148,6 +146,7 @@ export default function URLList() {
               data={url}
               onDelete={() => setDeleteData(url)}
               onEdit={() => {
+                setErrors([])
                 setPayload(url);
                 setOpenEdit(true)
               }}
