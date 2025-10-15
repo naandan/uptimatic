@@ -1,85 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>🚨 Website Down Alert</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 30px auto;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        .header {
-            background-color: #d9534f;
-            color: #fff;
-            text-align: center;
-            padding: 20px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 22px;
-        }
-        .content {
-            padding: 25px 30px;
-            text-align: left;
-        }
-        .content h2 {
-            color: #d9534f;
-            font-size: 20px;
-            margin-top: 0;
-        }
-        .info-box {
-            background-color: #fcebea;
-            border-left: 5px solid #d9534f;
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-        }
-        .footer {
-            background-color: #f1f1f1;
-            color: #777;
-            font-size: 13px;
-            text-align: center;
-            padding: 12px;
-        }
-        a {
-            color: #0d6efd;
-            text-decoration: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>🚨 Website Down Alert</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+      color: #111827;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      overflow: hidden;
+      text-align: left;
+    }
+    .header {
+      background-color: #111827; /* hitam gelap sesuai tema */
+      color: #ffffff;
+      text-align: center;
+      padding: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .logo {
+      max-width: 120px;
+      display: block;
+      margin: 0 auto 15px auto;
+    }
+    .content {
+      padding: 25px 30px;
+    }
+    .content h2 {
+      color: #111827;
+      font-size: 20px;
+      margin-top: 0;
+      font-weight: 600;
+    }
+    .info-box {
+      background-color: #f3f4f6; /* lembut agar kontras tapi netral */
+      border-left: 5px solid #111827; /* garis kiri hitam sesuai tema */
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      word-break: break-word;
+    }
+    .info-box a {
+      color: #111827;
+      text-decoration: underline;
+    }
+    .footer {
+      background-color: #f1f1f1;
+      color: #9ca3af;
+      font-size: 13px;
+      text-align: center;
+      padding: 12px;
+      font-weight: 400;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚠️ Website Down Detected</h1>
-        </div>
-        <div class="content">
-            <p>We detected that one of your monitored URLs is currently <strong>down</strong>:</p>
-
-            <div class="info-box">
-                <strong>{{.Label}}</strong><br>
-                <a href="{{.URL}}" target="_blank">{{.URL}}</a><br>
-                <small>Checked at: {{.CheckedAt}}</small>
-            </div>
-
-            <p>Status Code: <strong>{{.Status}}</strong></p>
-            <p>Response Time: <strong>{{.ResponseTime}} ms</strong></p>
-
-            <p>Please check your site to confirm if the issue persists.</p>
-        </div>
-        <div class="footer">
-            <p>This alert was generated automatically by <strong>Uptimatic</strong>.</p>
-        </div>
+  <div class="container">
+    <div class="header">
+      <!-- Logo -->
+      <img src="{{.LogoURL}}" alt="Uptimatic Logo" class="logo">
+      <h1>⚠️ Website Down Detected</h1>
     </div>
+    <div class="content">
+      <p>Kami mendeteksi bahwa salah satu URL yang dipantau sedang <strong>down</strong>:</p>
+
+      <div class="info-box">
+        <strong>{{.Label}}</strong><br>
+        <a href="{{.URL}}" target="_blank">{{.URL}}</a><br>
+        <small>Checked at: {{.CheckedAt}}</small>
+      </div>
+
+      <p>Status Code: <strong>{{.Status}}</strong></p>
+      <p>Response Time: <strong>{{.ResponseTime}} ms</strong></p>
+
+      <p>Silakan cek situs Anda untuk memastikan masalah ini.</p>
+    </div>
+    <div class="footer">
+      <p>Notifikasi ini dikirim otomatis oleh <strong>Uptimatic</strong>.</p>
+    </div>
+  </div>
 </body>
 </html>

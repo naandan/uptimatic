@@ -47,7 +47,7 @@ func (h *authHandler) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(req.Email, req.Password, h.cfg.AppDomain)
+	user, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, h.cfg.AppDomain)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -69,7 +69,7 @@ func (h *authHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.authService.Login(req.Email, req.Password)
+	access, refresh, err := h.authService.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
 		return
@@ -90,7 +90,7 @@ func (h *authHandler) LogoutHandler(c *gin.Context) {
 		return
 	}
 
-	if err := h.authService.Logout(refreshToken); err != nil {
+	if err := h.authService.Logout(c.Request.Context(), refreshToken); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
 	}
@@ -109,7 +109,7 @@ func (h *authHandler) RefreshHandler(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.authService.Refresh(refreshToken)
+	access, refresh, err := h.authService.Refresh(c.Request.Context(), refreshToken)
 	if err != nil {
 		c.SetCookie("access_token", "", -1, "/", h.cfg.AppDomain, true, true)
 		c.SetCookie("refresh_token", "", -1, "/", h.cfg.AppDomain, true, true)
@@ -138,7 +138,7 @@ func (h *authHandler) ProfileHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Profile(userIdUint)
+	user, err := h.authService.Profile(c.Request.Context(), userIdUint)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -149,7 +149,7 @@ func (h *authHandler) ProfileHandler(c *gin.Context) {
 
 func (h *authHandler) VerifyHandler(c *gin.Context) {
 	token := c.Query("token")
-	if err := h.authService.VerifyEmail(token); err != nil {
+	if err := h.authService.VerifyEmail(c.Request.Context(), token); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
 	}
@@ -163,7 +163,7 @@ func (h *authHandler) ResendVerificationHandler(c *gin.Context) {
 		return
 	}
 
-	ttl, err := h.authService.ResendVerificationEmail(userID, h.cfg.AppDomain)
+	ttl, err := h.authService.ResendVerificationEmail(c.Request.Context(), userID, h.cfg.AppDomain)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -178,7 +178,7 @@ func (h *authHandler) ResendVerificationEmailTTLHandler(c *gin.Context) {
 		return
 	}
 
-	ttl, err := h.authService.ResendVerificationEmailTTL(userID)
+	ttl, err := h.authService.ResendVerificationEmailTTL(c.Request.Context(), userID)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -196,7 +196,7 @@ func (h *authHandler) SendPasswordResetEmailHandler(c *gin.Context) {
 		utils.BindErrorResponse(c, err)
 		return
 	}
-	if err := h.authService.SendPasswordResetEmail(req.Email, h.cfg.AppDomain); err != nil {
+	if err := h.authService.SendPasswordResetEmail(c.Request.Context(), req.Email, h.cfg.AppDomain); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
 	}
@@ -213,7 +213,7 @@ func (h *authHandler) ResetPasswordHandler(c *gin.Context) {
 		utils.BindErrorResponse(c, err)
 		return
 	}
-	if err := h.authService.ResetPassword(req.Token, req.Password); err != nil {
+	if err := h.authService.ResetPassword(c.Request.Context(), req.Token, req.Password); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
 	}

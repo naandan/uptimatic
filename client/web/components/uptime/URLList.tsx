@@ -28,6 +28,7 @@ export default function URLList() {
     .then((res) => {
       setUrls([...urls, res.data]);
       setOpenAdd(false);
+      toast.success("URL berhasil ditambahkan");
     })
     .catch((err) => {
       console.error(err);

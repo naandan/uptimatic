@@ -62,7 +62,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="id" className="scroll-smooth">
+    <html lang="id" className="scroll-smooth" data-scroll-behavior="smooth">
       <body className={`${poppins.variable} antialiased`}>
         <AuthProvider>
           <ClientLayout>{children}</ClientLayout>
