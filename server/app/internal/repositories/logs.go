@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"fmt"
 	"time"
 	"uptimatic/internal/models"
@@ -9,10 +10,10 @@ import (
 )
 
 type StatusLogRepository interface {
-	Create(tx *gorm.DB, log *models.StatusLog) error
-	GetByID(tx *gorm.DB, id uint) (*models.StatusLog, error)
-	ListByURLID(tx *gorm.DB, urlID uint) ([]models.StatusLog, error)
-	GetUptimeStats(tx *gorm.DB, urlID uint, mode string, targetDate time.Time) ([]models.UptimeStat, error)
+	Create(ctx context.Context, tx *gorm.DB, log *models.StatusLog) error
+	GetByID(ctx context.Context, tx *gorm.DB, id uint) (*models.StatusLog, error)
+	ListByURLID(ctx context.Context, tx *gorm.DB, urlID uint) ([]models.StatusLog, error)
+	GetUptimeStats(ctx context.Context, tx *gorm.DB, urlID uint, mode string, targetDate time.Time) ([]models.UptimeStat, error)
 }
 
 type statusLogRepository struct{}
@@ -21,29 +22,29 @@ func NewLogRepository() StatusLogRepository {
 	return &statusLogRepository{}
 }
 
-func (r *statusLogRepository) Create(tx *gorm.DB, log *models.StatusLog) error {
-	return tx.Create(log).Error
+func (r *statusLogRepository) Create(ctx context.Context, tx *gorm.DB, log *models.StatusLog) error {
+	return tx.WithContext(ctx).Create(log).Error
 }
 
-func (r *statusLogRepository) GetByID(tx *gorm.DB, id uint) (*models.StatusLog, error) {
+func (r *statusLogRepository) GetByID(ctx context.Context, tx *gorm.DB, id uint) (*models.StatusLog, error) {
 	var log models.StatusLog
-	err := tx.First(&log, id).Error
+	err := tx.WithContext(ctx).First(&log, id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &log, nil
 }
 
-func (r *statusLogRepository) ListByURLID(tx *gorm.DB, urlID uint) ([]models.StatusLog, error) {
+func (r *statusLogRepository) ListByURLID(ctx context.Context, tx *gorm.DB, urlID uint) ([]models.StatusLog, error) {
 	var logs []models.StatusLog
-	err := tx.Where("url_id = ?", urlID).Find(&logs).Error
+	err := tx.WithContext(ctx).Where("url_id = ?", urlID).Find(&logs).Error
 	if err != nil {
 		return nil, err
 	}
 	return logs, nil
 }
 
-func (r *statusLogRepository) GetUptimeStats(tx *gorm.DB, urlID uint, mode string, targetDate time.Time) ([]models.UptimeStat, error) {
+func (r *statusLogRepository) GetUptimeStats(ctx context.Context, tx *gorm.DB, urlID uint, mode string, targetDate time.Time) ([]models.UptimeStat, error) {
 	var results []models.UptimeStat
 
 	var truncUnit string
@@ -78,7 +79,7 @@ func (r *statusLogRepository) GetUptimeStats(tx *gorm.DB, urlID uint, mode strin
 		ORDER BY bucket_start ASC;
 	`
 
-	if err := tx.Raw(query, truncUnit, urlID, start, end).Scan(&results).Error; err != nil {
+	if err := tx.WithContext(ctx).Raw(query, truncUnit, urlID, start, end).Scan(&results).Error; err != nil {
 		return nil, err
 	}
 

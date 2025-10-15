@@ -17,6 +17,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/services/auth";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 interface AuthFormProps {
   type: "login" | "register";
@@ -46,9 +47,11 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     }else{
       try {
         await authService.login(payload)
+        toast.success("Login berhasil");
         setLoggedIn(true);
         router.push("/uptime");
       } catch (err) {
+        toast.error("Email atau kata sandi salah");
         console.error(err);
       }finally {
         setLoading(false);
@@ -84,6 +87,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                   id="email"
                   type="email"
                   placeholder="contoh@domain.com"
+                  autoComplete="email"
                   value={payload.email}
                   onChange={(e) =>
                     setPayload({ ...payload, email: e.target.value })
@@ -98,6 +102,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                   id="password"
                   type="password"
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   value={payload.password}
                   onChange={(e) =>
                     setPayload({ ...payload, password: e.target.value })

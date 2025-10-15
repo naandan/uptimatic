@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -12,12 +13,12 @@ import (
 )
 
 type URLService interface {
-	Create(url *schema.UrlRequest, userID uint) (*schema.UrlResponse, error)
-	Update(url *schema.UrlRequest, id uint) (*schema.UrlResponse, error)
-	Delete(id uint) error
-	FindByID(id uint) (*schema.UrlResponse, error)
-	ListByUserID(userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, error)
-	GetUptimeStats(urlID uint, mode string, offset int) ([]models.UptimeStat, error)
+	Create(ctx context.Context, url *schema.UrlRequest, userID uint) (*schema.UrlResponse, error)
+	Update(ctx context.Context, url *schema.UrlRequest, id uint) (*schema.UrlResponse, error)
+	Delete(ctx context.Context, id uint) error
+	FindByID(ctx context.Context, id uint) (*schema.UrlResponse, error)
+	ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, error)
+	GetUptimeStats(ctx context.Context, urlID uint, mode string, offset int) ([]models.UptimeStat, error)
 }
 
 type urlService struct {
@@ -30,7 +31,7 @@ func NewUrlService(db *gorm.DB, urlRepo repositories.UrlRepository, statusLogRep
 	return &urlService{db, urlRepo, statusLogRepo}
 }
 
-func (s *urlService) Create(url *schema.UrlRequest, userID uint) (*schema.UrlResponse, error) {
+func (s *urlService) Create(ctx context.Context, url *schema.UrlRequest, userID uint) (*schema.UrlResponse, error) {
 	// if !utils.ContainsInt(url.Interval) {
 	// 	return nil, errors.New("invalid interval")
 	// }
@@ -42,7 +43,7 @@ func (s *urlService) Create(url *schema.UrlRequest, userID uint) (*schema.UrlRes
 		Interval: 300,
 		Active:   *url.Active,
 	}
-	err := s.urlRepo.Create(s.db, urlModel)
+	err := s.urlRepo.Create(ctx, s.db, urlModel)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +58,8 @@ func (s *urlService) Create(url *schema.UrlRequest, userID uint) (*schema.UrlRes
 	}, nil
 }
 
-func (s *urlService) Update(url *schema.UrlRequest, id uint) (*schema.UrlResponse, error) {
-	urlModel, err := s.urlRepo.FindByID(s.db, id)
+func (s *urlService) Update(ctx context.Context, url *schema.UrlRequest, id uint) (*schema.UrlResponse, error) {
+	urlModel, err := s.urlRepo.FindByID(ctx, s.db, id)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (s *urlService) Update(url *schema.UrlRequest, id uint) (*schema.UrlRespons
 	urlModel.URL = url.Url
 	// urlModel.Interval = url.Interval
 	urlModel.Active = *url.Active
-	err = s.urlRepo.Update(s.db, urlModel)
+	err = s.urlRepo.Update(ctx, s.db, urlModel)
 	if err != nil {
 		return nil, err
 	}
@@ -81,16 +82,16 @@ func (s *urlService) Update(url *schema.UrlRequest, id uint) (*schema.UrlRespons
 	}, nil
 }
 
-func (s *urlService) Delete(id uint) error {
-	urlModel, err := s.urlRepo.FindByID(s.db, id)
+func (s *urlService) Delete(ctx context.Context, id uint) error {
+	urlModel, err := s.urlRepo.FindByID(ctx, s.db, id)
 	if err != nil {
 		return err
 	}
-	return s.urlRepo.Delete(s.db, urlModel)
+	return s.urlRepo.Delete(ctx, s.db, urlModel)
 }
 
-func (s *urlService) FindByID(id uint) (*schema.UrlResponse, error) {
-	urlModel, err := s.urlRepo.FindByID(s.db, id)
+func (s *urlService) FindByID(ctx context.Context, id uint) (*schema.UrlResponse, error) {
+	urlModel, err := s.urlRepo.FindByID(ctx, s.db, id)
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +106,8 @@ func (s *urlService) FindByID(id uint) (*schema.UrlResponse, error) {
 	}, nil
 }
 
-func (s *urlService) ListByUserID(userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, error) {
-	urls, count, err := s.urlRepo.ListByUserID(s.db, userID, page, perPage, active, searchLabel, sortBy)
+func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, error) {
+	urls, count, err := s.urlRepo.ListByUserID(ctx, s.db, userID, page, perPage, active, searchLabel, sortBy)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -128,7 +129,7 @@ func (s *urlService) ListByUserID(userID uint, page, perPage int, active *bool, 
 	return urlResponses, count, nil
 }
 
-func (s *urlService) GetUptimeStats(urlID uint, mode string, offset int) ([]models.UptimeStat, error) {
+func (s *urlService) GetUptimeStats(ctx context.Context, urlID uint, mode string, offset int) ([]models.UptimeStat, error) {
 	var targetDate time.Time
 
 	switch mode {
@@ -148,7 +149,7 @@ func (s *urlService) GetUptimeStats(urlID uint, mode string, offset int) ([]mode
 	// 	return nil, err
 	// }
 
-	logs, err := s.statusLogRepo.GetUptimeStats(s.db, urlID, mode, targetDate.UTC())
+	logs, err := s.statusLogRepo.GetUptimeStats(ctx, s.db, urlID, mode, targetDate.UTC())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return []models.UptimeStat{}, nil

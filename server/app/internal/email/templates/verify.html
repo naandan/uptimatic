@@ -1,23 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Verify Your Email</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f9f9f9; }
-        .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; text-align: center; }
-        h1 { color: #333; }
-        a.button { background-color: #4CAF50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; }
-        p { font-size: 16px; color: #555; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Verifikasi Email</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 30px 25px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    .logo {
+      max-width: 150px;
+      margin-bottom: 25px;
+    }
+    h1 {
+      font-size: 26px;
+      color: #111827;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    p {
+      font-size: 16px;
+      color: #374151;
+      margin: 10px 0 20px 0;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+    a.button {
+      display: inline-block;
+      background-color: #111827; /* hitam gelap */
+      color: white;
+      padding: 14px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+    a.button:hover {
+      background-color: #1f2937; /* hitam lebih terang saat hover */
+    }
+    .footer {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 25px;
+      font-weight: 400;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Verify Your Email</h1>
-        <p>Hi {{.Name}}, thanks for signing up!</p>
-        <p>Please verify your email address by clicking the button below:</p>
-        <p><a href="{{.VerificationLink}}" class="button">Verify Email</a></p>
-        <p>If you didn't create an account, you can safely ignore this email.</p>
+  <div class="container">
+    <!-- Header dengan logo -->
+    <img src="{{.LogoURL}}" alt="Uptimatic Logo" class="logo">
+
+    <h1>Verifikasi Email</h1>
+    <p>Halo {{.Name}}, terima kasih telah mendaftar!</p>
+    <p>Silakan verifikasi alamat email Anda dengan klik tombol di bawah:</p>
+    <p><a href="{{.VerificationLink}}" class="button">Verifikasi Email</a></p>
+    <p>Jika Anda tidak membuat akun, abaikan email ini dengan aman.</p>
+
+    <div class="footer">
+      Uptimatic. Semua hak dilindungi.
     </div>
+  </div>
 </body>
 </html>

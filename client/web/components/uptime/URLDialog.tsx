@@ -44,6 +44,13 @@ export function AddEditDialog({
       interval: Number(form.interval),
       active: form.active,
     });
+
+    setForm({
+      label: "",
+      url: "",
+      interval: 5,
+      active: true,
+    });
   };
 
   return (

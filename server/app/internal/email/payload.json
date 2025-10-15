@@ -4,6 +4,7 @@
         "subject": "Welcome to Our App!",
         "type": "welcome",
         "data": {
+            "LogoURL": "https://example.com/logo.png",
             "Name": "Nandan",
             "Link": "https://example.com/start"
         }
@@ -13,8 +14,19 @@
         "subject": "Please Verify Your Email",
         "type": "verify",
         "data": {
+            "LogoURL": "https://example.com/logo.png",
             "Name": "Nandan",
             "VerificationLink": "https://example.com/verify?token=abc123xyz"
+        }
+    },
+    "password_reset":{
+        "to": "user@example.com",
+        "subject": "Password Reset",
+        "type": "password_reset",
+        "data": {
+            "LogoURL": "https://example.com/logo.png",
+            "Name": "Nandan",
+            "ResetLink": "https://example.com/reset?token=abc123xyz"
         }
     },
     "down":{
@@ -22,6 +34,7 @@
         "subject": "Service Down",
         "type": "down",
         "data": {
+            "LogoURL": "https://example.com/logo.png",
             "Label": "Database",
             "URL": "https://example.com/404",
             "Status": 404,

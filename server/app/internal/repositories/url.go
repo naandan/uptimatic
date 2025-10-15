@@ -1,18 +1,19 @@
 package repositories
 
 import (
+	"context"
 	"uptimatic/internal/models"
 
 	"gorm.io/gorm"
 )
 
 type UrlRepository interface {
-	Create(tx *gorm.DB, url *models.URL) error
-	Update(tx *gorm.DB, url *models.URL) error
-	Delete(tx *gorm.DB, url *models.URL) error
-	FindByID(tx *gorm.DB, id uint) (*models.URL, error)
-	ListByUserID(tx *gorm.DB, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]models.URL, int, error)
-	GetActiveURLs(tx *gorm.DB) ([]models.URL, error)
+	Create(ctx context.Context, tx *gorm.DB, url *models.URL) error
+	Update(ctx context.Context, tx *gorm.DB, url *models.URL) error
+	Delete(ctx context.Context, tx *gorm.DB, url *models.URL) error
+	FindByID(ctx context.Context, tx *gorm.DB, id uint) (*models.URL, error)
+	ListByUserID(ctx context.Context, tx *gorm.DB, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]models.URL, int, error)
+	GetActiveURLs(ctx context.Context, tx *gorm.DB) ([]models.URL, error)
 }
 
 type urlRepository struct{}
@@ -21,21 +22,21 @@ func NewUrlRepository() UrlRepository {
 	return &urlRepository{}
 }
 
-func (r *urlRepository) Create(tx *gorm.DB, url *models.URL) error {
-	return tx.Create(url).Error
+func (r *urlRepository) Create(ctx context.Context, tx *gorm.DB, url *models.URL) error {
+	return tx.WithContext(ctx).Create(url).Error
 }
 
-func (r *urlRepository) Update(tx *gorm.DB, url *models.URL) error {
-	return tx.Save(url).Error
+func (r *urlRepository) Update(ctx context.Context, tx *gorm.DB, url *models.URL) error {
+	return tx.WithContext(ctx).Save(url).Error
 }
 
-func (r *urlRepository) Delete(tx *gorm.DB, url *models.URL) error {
-	return tx.Delete(url).Error
+func (r *urlRepository) Delete(ctx context.Context, tx *gorm.DB, url *models.URL) error {
+	return tx.WithContext(ctx).Delete(url).Error
 }
 
-func (r *urlRepository) FindByID(tx *gorm.DB, id uint) (*models.URL, error) {
+func (r *urlRepository) FindByID(ctx context.Context, tx *gorm.DB, id uint) (*models.URL, error) {
 	var url models.URL
-	err := tx.First(&url, id).Error
+	err := tx.WithContext(ctx).First(&url, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +44,7 @@ func (r *urlRepository) FindByID(tx *gorm.DB, id uint) (*models.URL, error) {
 }
 
 func (r *urlRepository) ListByUserID(
+	ctx context.Context,
 	tx *gorm.DB,
 	userID uint,
 	page, perPage int,
@@ -54,7 +56,7 @@ func (r *urlRepository) ListByUserID(
 	var urls []models.URL
 	var count int64
 
-	query := tx.Model(&models.URL{}).Where("user_id = ?", userID)
+	query := tx.WithContext(ctx).Model(&models.URL{}).Where("user_id = ?", userID)
 
 	if active != nil {
 		query = query.Where("active = ?", *active)
@@ -81,9 +83,9 @@ func (r *urlRepository) ListByUserID(
 	return urls, int(count), nil
 }
 
-func (r *urlRepository) GetActiveURLs(tx *gorm.DB) ([]models.URL, error) {
+func (r *urlRepository) GetActiveURLs(ctx context.Context, tx *gorm.DB) ([]models.URL, error) {
 	var urls []models.URL
-	err := tx.Preload("User").Where("active = ?", true).Find(&urls).Error
+	err := tx.WithContext(ctx).Preload("User").Where("active = ?", true).Find(&urls).Error
 	if err != nil {
 		return nil, err
 	}

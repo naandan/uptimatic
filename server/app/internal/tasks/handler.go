@@ -62,7 +62,7 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		CheckedAt:    time.Now().UTC(),
 	}
 
-	if err := h.logRepo.Create(h.pgsql, &log); err != nil {
+	if err := h.logRepo.Create(ctx, h.pgsql, &log); err != nil {
 		return fmt.Errorf("failed to create status log: %w", err)
 	}
 
@@ -73,6 +73,7 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 			Subject: "Uptime Check",
 			Type:    email.EmailDown,
 			Data: map[string]any{
+				"LogoURL":      fmt.Sprintf("%s/icon.png", h.cfg.AppDomain),
 				"Label":        payload.Label,
 				"URL":          payload.URL,
 				"Status":       log.Status,
@@ -92,7 +93,7 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 	}
 
 	payload.LastChecked = &log.CheckedAt
-	if err := h.urlRepo.Update(h.pgsql, &payload); err != nil {
+	if err := h.urlRepo.Update(ctx, h.pgsql, &payload); err != nil {
 		return fmt.Errorf("failed to update URL: %w", err)
 	}
 
@@ -105,7 +106,7 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 }
 
 func (h *TaskHandler) ValidateUptimeHandler(ctx context.Context, t *asynq.Task) error {
-	urls, err := h.urlRepo.GetActiveURLs(h.pgsql)
+	urls, err := h.urlRepo.GetActiveURLs(ctx, h.pgsql)
 	if err != nil {
 		return fmt.Errorf("failed to get active URLs: %w", err)
 	}

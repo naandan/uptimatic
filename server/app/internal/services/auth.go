@@ -19,16 +19,16 @@ import (
 )
 
 type AuthService interface {
-	Register(email, password, appUrl string) (*models.User, error)
-	Login(email, password string) (string, string, error)
-	Logout(refreshToken string) error
-	Refresh(refreshToken string) (string, string, error)
-	Profile(userId uint) (*models.User, error)
-	VerifyEmail(token string) error
-	ResendVerificationEmail(userId uint, appUrl string) (int, error)
-	ResendVerificationEmailTTL(userId uint) (int, error)
-	SendPasswordResetEmail(userEmail, appUrl string) error
-	ResetPassword(token, password string) error
+	Register(ctx context.Context, email, password, appUrl string) (*models.User, error)
+	Login(ctx context.Context, email, password string) (string, string, error)
+	Logout(ctx context.Context, refreshToken string) error
+	Refresh(ctx context.Context, refreshToken string) (string, string, error)
+	Profile(ctx context.Context, userId uint) (*models.User, error)
+	VerifyEmail(ctx context.Context, token string) error
+	ResendVerificationEmail(ctx context.Context, userId uint, appUrl string) (int, error)
+	ResendVerificationEmailTTL(ctx context.Context, userId uint) (int, error)
+	SendPasswordResetEmail(ctx context.Context, userEmail, appUrl string) error
+	ResetPassword(ctx context.Context, token, password string) error
 }
 
 type authService struct {
@@ -43,15 +43,15 @@ func NewAuthService(db *gorm.DB, userRepo repositories.UserRepository, redis *re
 	return &authService{db, userRepo, redis, jwtUtil, asyncClient}
 }
 
-func (s *authService) Register(userEmail, password string, appUrl string) (*models.User, error) {
-	_, err := s.userRepo.FindByEmail(s.db, userEmail)
+func (s *authService) Register(ctx context.Context, userEmail, password string, appUrl string) (*models.User, error) {
+	_, err := s.userRepo.FindByEmail(ctx, s.db, userEmail)
 	if err == nil {
 		return nil, errors.New("email already used")
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	user := &models.User{Email: userEmail, Password: string(hashed)}
-	if err := s.userRepo.Create(s.db, user); err != nil {
+	if err := s.userRepo.Create(ctx, s.db, user); err != nil {
 		return nil, err
 	}
 
@@ -61,17 +61,18 @@ func (s *authService) Register(userEmail, password string, appUrl string) (*mode
 	}
 
 	link := fmt.Sprintf("%s/auth/verify?token=%s", appUrl, token)
-	tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"Name": userEmail, "VerificationLink": link})
+	iconUrl := fmt.Sprintf("%s/icon.png", appUrl)
+	tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"LogoURL": iconUrl, "Name": userEmail, "VerificationLink": link})
 
-	if err := s.redis.Set(context.Background(), utils.GetEmailVerificationTokenKey(userEmail), user.ID, 60*time.Second).Err(); err != nil {
+	if err := s.redis.Set(ctx, utils.GetEmailVerificationTokenKey(userEmail), user.ID, 60*time.Second).Err(); err != nil {
 		return nil, err
 	}
 
 	return user, nil
 }
 
-func (s *authService) Login(email, password string) (string, string, error) {
-	user, err := s.userRepo.FindByEmail(s.db, email)
+func (s *authService) Login(ctx context.Context, email, password string) (string, string, error) {
+	user, err := s.userRepo.FindByEmail(ctx, s.db, email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", "", errors.New("email or password incorrect")
@@ -88,19 +89,19 @@ func (s *authService) Login(email, password string) (string, string, error) {
 		return "", "", err
 	}
 
-	if err := s.redis.Set(context.Background(), utils.GetRefreshTokenKey(refresh), user.ID, s.jwtUtil.RefreshTTL).Err(); err != nil {
+	if err := s.redis.Set(ctx, utils.GetRefreshTokenKey(refresh), user.ID, s.jwtUtil.RefreshTTL).Err(); err != nil {
 		return "", "", err
 	}
 
 	return access, refresh, nil
 }
 
-func (s *authService) Logout(refreshToken string) error {
-	return s.redis.Del(context.Background(), utils.GetRefreshTokenKey(refreshToken)).Err()
+func (s *authService) Logout(ctx context.Context, refreshToken string) error {
+	return s.redis.Del(ctx, utils.GetRefreshTokenKey(refreshToken)).Err()
 }
 
-func (s *authService) Refresh(oldRefresh string) (string, string, error) {
-	id, err := s.redis.Get(context.Background(), utils.GetRefreshTokenKey(oldRefresh)).Result()
+func (s *authService) Refresh(ctx context.Context, oldRefresh string) (string, string, error) {
+	id, err := s.redis.Get(ctx, utils.GetRefreshTokenKey(oldRefresh)).Result()
 	if err != nil {
 		return "", "", errors.New("unauthorized")
 	}
@@ -110,11 +111,11 @@ func (s *authService) Refresh(oldRefresh string) (string, string, error) {
 		return "", "", err
 	}
 
-	if err := s.redis.Del(context.Background(), utils.GetRefreshTokenKey(oldRefresh)).Err(); err != nil {
+	if err := s.redis.Del(ctx, utils.GetRefreshTokenKey(oldRefresh)).Err(); err != nil {
 		return "", "", err
 	}
 
-	user, err := s.userRepo.FindByID(s.db, uint(uintID))
+	user, err := s.userRepo.FindByID(ctx, s.db, uint(uintID))
 	if err != nil {
 		return "", "", err
 	}
@@ -124,18 +125,18 @@ func (s *authService) Refresh(oldRefresh string) (string, string, error) {
 		return "", "", err
 	}
 
-	if err := s.redis.Set(context.Background(), utils.GetRefreshTokenKey(refresh), user.ID, s.jwtUtil.RefreshTTL).Err(); err != nil {
+	if err := s.redis.Set(ctx, utils.GetRefreshTokenKey(refresh), user.ID, s.jwtUtil.RefreshTTL).Err(); err != nil {
 		return "", "", err
 	}
 
 	return access, refresh, nil
 }
 
-func (s *authService) Profile(userId uint) (*models.User, error) {
-	return s.userRepo.FindByID(s.db, userId)
+func (s *authService) Profile(ctx context.Context, userId uint) (*models.User, error) {
+	return s.userRepo.FindByID(ctx, s.db, userId)
 }
 
-func (s *authService) VerifyEmail(token string) error {
+func (s *authService) VerifyEmail(ctx context.Context, token string) error {
 	claims, err := s.jwtUtil.ValidateToken(token)
 	if err != nil {
 		return err
@@ -147,7 +148,7 @@ func (s *authService) VerifyEmail(token string) error {
 	}
 
 	userId := uint(id)
-	user, err := s.userRepo.FindByID(s.db, userId)
+	user, err := s.userRepo.FindByID(ctx, s.db, userId)
 	if err != nil {
 		return err
 	}
@@ -157,15 +158,15 @@ func (s *authService) VerifyEmail(token string) error {
 	}
 
 	user.Verified = true
-	if err := s.userRepo.Update(s.db, user); err != nil {
+	if err := s.userRepo.Update(ctx, s.db, user); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *authService) ResendVerificationEmail(userID uint, appUrl string) (int, error) {
-	user, err := s.userRepo.FindByID(s.db, userID)
+func (s *authService) ResendVerificationEmail(ctx context.Context, userID uint, appUrl string) (int, error) {
+	user, err := s.userRepo.FindByID(ctx, s.db, userID)
 	if err != nil {
 		return 0, err
 	}
@@ -173,7 +174,7 @@ func (s *authService) ResendVerificationEmail(userID uint, appUrl string) (int, 
 		return 0, errors.New("email already verified")
 	}
 
-	expSec, err := s.redis.TTL(context.Background(), utils.GetEmailVerificationTokenKey(user.Email)).Result()
+	expSec, err := s.redis.TTL(ctx, utils.GetEmailVerificationTokenKey(user.Email)).Result()
 	if err == nil && expSec > 0 {
 		return int(expSec.Seconds()), nil
 	}
@@ -184,21 +185,22 @@ func (s *authService) ResendVerificationEmail(userID uint, appUrl string) (int, 
 	}
 
 	link := fmt.Sprintf("%s/auth/verify?token=%s", appUrl, token)
-	tasks.EnqueueEmail(s.asyncClient, user.Email, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"Name": user.Email, "VerificationLink": link})
+	iconUrl := fmt.Sprintf("%s/icon.png", appUrl)
+	tasks.EnqueueEmail(s.asyncClient, user.Email, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{"LogoURL": iconUrl, "Name": user.Email, "VerificationLink": link})
 
-	if err := s.redis.Set(context.Background(), utils.GetEmailVerificationTokenKey(user.Email), user.ID, 60*time.Second).Err(); err != nil {
+	if err := s.redis.Set(ctx, utils.GetEmailVerificationTokenKey(user.Email), user.ID, 60*time.Second).Err(); err != nil {
 		return 0, err
 	}
 
-	expSecInt, err := s.redis.TTL(context.Background(), utils.GetEmailVerificationTokenKey(user.Email)).Result()
+	expSecInt, err := s.redis.TTL(ctx, utils.GetEmailVerificationTokenKey(user.Email)).Result()
 	if err != nil {
 		return 0, err
 	}
 	return int(expSecInt.Seconds()), nil
 }
 
-func (s *authService) ResendVerificationEmailTTL(userId uint) (int, error) {
-	user, err := s.userRepo.FindByID(s.db, userId)
+func (s *authService) ResendVerificationEmailTTL(ctx context.Context, userId uint) (int, error) {
+	user, err := s.userRepo.FindByID(ctx, s.db, userId)
 	if err != nil {
 		return 0, err
 	}
@@ -206,7 +208,7 @@ func (s *authService) ResendVerificationEmailTTL(userId uint) (int, error) {
 		return 0, errors.New("email already verified")
 	}
 
-	ttl, err := s.redis.TTL(context.Background(), utils.GetEmailVerificationTokenKey(user.Email)).Result()
+	ttl, err := s.redis.TTL(ctx, utils.GetEmailVerificationTokenKey(user.Email)).Result()
 	if err != nil {
 		return 0, err
 	}
@@ -216,8 +218,8 @@ func (s *authService) ResendVerificationEmailTTL(userId uint) (int, error) {
 	return int(ttl.Seconds()), nil
 }
 
-func (s *authService) SendPasswordResetEmail(userEmail, appUrl string) error {
-	user, err := s.userRepo.FindByEmail(s.db, userEmail)
+func (s *authService) SendPasswordResetEmail(ctx context.Context, userEmail, appUrl string) error {
+	user, err := s.userRepo.FindByEmail(ctx, s.db, userEmail)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
@@ -231,12 +233,13 @@ func (s *authService) SendPasswordResetEmail(userEmail, appUrl string) error {
 	}
 
 	link := fmt.Sprintf("%s/auth/reset-password?token=%s", appUrl, token)
-	tasks.EnqueueEmail(s.asyncClient, user.Email, "Reset your password - Uptimatic", email.EmailPasswordReset, map[string]any{"Name": user.Email, "ResetLink": link})
+	iconUrl := fmt.Sprintf("%s/icon.png", appUrl)
+	tasks.EnqueueEmail(s.asyncClient, user.Email, "Reset your password - Uptimatic", email.EmailPasswordReset, map[string]any{"LogoURL": iconUrl, "Name": user.Email, "ResetLink": link})
 
 	return nil
 }
 
-func (s *authService) ResetPassword(token, password string) error {
+func (s *authService) ResetPassword(ctx context.Context, token, password string) error {
 	claims, err := s.jwtUtil.ValidateToken(token)
 	if err != nil {
 		return err
@@ -248,14 +251,14 @@ func (s *authService) ResetPassword(token, password string) error {
 	}
 
 	userId := uint(id)
-	user, err := s.userRepo.FindByID(s.db, userId)
+	user, err := s.userRepo.FindByID(ctx, s.db, userId)
 	if err != nil {
 		return err
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	user.Password = string(hashed)
-	if err := s.userRepo.Update(s.db, user); err != nil {
+	if err := s.userRepo.Update(ctx, s.db, user); err != nil {
 		return err
 	}
 

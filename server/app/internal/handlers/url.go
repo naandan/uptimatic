@@ -41,7 +41,7 @@ func (h *urlHandler) CreateHandler(c *gin.Context) {
 	}
 
 	userId := c.GetUint("user_id")
-	urlResponse, err := h.urlService.Create(&urlRequest, userId)
+	urlResponse, err := h.urlService.Create(c.Request.Context(), &urlRequest, userId)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -68,7 +68,7 @@ func (h *urlHandler) UpdateHandler(c *gin.Context) {
 		return
 	}
 
-	urlResponse, err := h.urlService.Update(&urlRequest, uint(idUint))
+	urlResponse, err := h.urlService.Update(c.Request.Context(), &urlRequest, uint(idUint))
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -84,7 +84,7 @@ func (h *urlHandler) DeleteHandler(c *gin.Context) {
 		return
 	}
 
-	if err := h.urlService.Delete(uint(idUint)); err != nil {
+	if err := h.urlService.Delete(c.Request.Context(), uint(idUint)); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
 	}
@@ -100,7 +100,7 @@ func (h *urlHandler) GetHandler(c *gin.Context) {
 		return
 	}
 
-	urlResponse, err := h.urlService.FindByID(uint(idUint))
+	urlResponse, err := h.urlService.FindByID(c.Request.Context(), uint(idUint))
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -137,7 +137,7 @@ func (h *urlHandler) ListHandler(c *gin.Context) {
 	searchLabel := c.Query("q")
 	sortBy := c.DefaultQuery("sort", "label")
 
-	urls, count, err := h.urlService.ListByUserID(c.GetUint("user_id"), page, limit, active, searchLabel, sortBy)
+	urls, count, err := h.urlService.ListByUserID(c.Request.Context(), c.GetUint("user_id"), page, limit, active, searchLabel, sortBy)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
@@ -163,7 +163,7 @@ func (h *urlHandler) GetUptimeStats(c *gin.Context) {
 		return
 	}
 
-	stats, err := h.urlService.GetUptimeStats(uint(idUint), mode, offset)
+	stats, err := h.urlService.GetUptimeStats(c.Request.Context(), uint(idUint), mode, offset)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
 		return
