@@ -24,21 +24,21 @@ func AuthMiddleware(jwtUtil *utils.JWTUtil) gin.HandlerFunc {
 		}
 
 		if token == "" {
-			utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "Missing access token")
+			utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "Missing access token", nil))
 			c.Abort()
 			return
 		}
 
 		claims, err := jwtUtil.ValidateToken(token)
 		if err != nil {
-			utils.ErrorResponse(c, http.StatusUnauthorized, utils.InvalidToken, "Invalid or expired token")
+			utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.InvalidToken, "Invalid or expired token", err))
 			c.Abort()
 			return
 		}
 
 		userID, ok := claims["user_id"].(float64)
 		if !ok {
-			utils.ErrorResponse(c, http.StatusUnauthorized, utils.InvalidToken, "Invalid token payload")
+			utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.InvalidToken, "Invalid token claims", nil))
 			c.Abort()
 			return
 		}

@@ -29,20 +29,24 @@ func PaginatedResponse(c *gin.Context, data any, count, limit, page, totalPage i
 	})
 }
 
-func ErrorResponse(c *gin.Context, status int, code, message string) {
-	c.JSON(status, gin.H{
+func ErrorResponse(c *gin.Context, appErr *AppError) {
+	resp := gin.H{
 		"request_id": getRequestID(c),
 		"error": gin.H{
-			"code":    code,
-			"message": message,
+			"code":    appErr.Code,
+			"message": appErr.Message,
 		},
-	})
+	}
+	if appErr.Fields != nil {
+		resp["error"].(gin.H)["fields"] = appErr.Fields
+	}
+	c.JSON(appErr.Status, resp)
 }
 
-func BindErrorResponse(c *gin.Context, err error) {
+func BindErrorResponse(c *gin.Context, appErr *AppError) {
 	requestID := getRequestID(c)
 
-	if verrs, ok := err.(validator.ValidationErrors); ok {
+	if verrs, ok := appErr.Err.(validator.ValidationErrors); ok {
 		errors := make(map[string][]map[string]interface{})
 
 		for _, e := range verrs {
@@ -79,10 +83,10 @@ func BindErrorResponse(c *gin.Context, err error) {
 			}
 		}
 
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
+		c.JSON(appErr.Status, gin.H{
 			"request_id": requestID,
 			"error": gin.H{
-				"code":    ValidationError,
+				"code":    appErr.Code,
 				"message": "Payload validation failed",
 				"fields":  errors,
 			},
@@ -90,7 +94,7 @@ func BindErrorResponse(c *gin.Context, err error) {
 		return
 	}
 
-	ErrorResponse(c, http.StatusBadRequest, ValidationError, err.Error())
+	ErrorResponse(c, appErr)
 }
 
 func getRequestID(c *gin.Context) string {

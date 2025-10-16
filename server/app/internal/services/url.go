@@ -3,22 +3,23 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
+	"net/http"
 	"time"
 	"uptimatic/internal/models"
 	"uptimatic/internal/repositories"
 	"uptimatic/internal/schema"
+	"uptimatic/internal/utils"
 
 	"gorm.io/gorm"
 )
 
 type URLService interface {
-	Create(ctx context.Context, url *schema.UrlRequest, userID uint) (*schema.UrlResponse, error)
-	Update(ctx context.Context, url *schema.UrlRequest, id uint) (*schema.UrlResponse, error)
-	Delete(ctx context.Context, id uint) error
-	FindByID(ctx context.Context, id uint) (*schema.UrlResponse, error)
-	ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, error)
-	GetUptimeStats(ctx context.Context, urlID uint, mode string, offset int) ([]models.UptimeStat, error)
+	Create(ctx context.Context, url *schema.UrlRequest, userID uint) (*schema.UrlResponse, *utils.AppError)
+	Update(ctx context.Context, url *schema.UrlRequest, id uint) (*schema.UrlResponse, *utils.AppError)
+	Delete(ctx context.Context, id uint) *utils.AppError
+	FindByID(ctx context.Context, id uint) (*schema.UrlResponse, *utils.AppError)
+	ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, *utils.AppError)
+	GetUptimeStats(ctx context.Context, urlID uint, mode string, offset int) ([]models.UptimeStat, *utils.AppError)
 }
 
 type urlService struct {
@@ -31,7 +32,7 @@ func NewUrlService(db *gorm.DB, urlRepo repositories.UrlRepository, statusLogRep
 	return &urlService{db, urlRepo, statusLogRepo}
 }
 
-func (s *urlService) Create(ctx context.Context, url *schema.UrlRequest, userID uint) (*schema.UrlResponse, error) {
+func (s *urlService) Create(ctx context.Context, url *schema.UrlRequest, userID uint) (*schema.UrlResponse, *utils.AppError) {
 	// if !utils.ContainsInt(url.Interval) {
 	// 	return nil, errors.New("invalid interval")
 	// }
@@ -45,7 +46,7 @@ func (s *urlService) Create(ctx context.Context, url *schema.UrlRequest, userID 
 	}
 	err := s.urlRepo.Create(ctx, s.db, urlModel)
 	if err != nil {
-		return nil, err
+		return nil, utils.InternalServerError("Error creating url", err)
 	}
 	return &schema.UrlResponse{
 		ID:          urlModel.ID,
@@ -58,10 +59,10 @@ func (s *urlService) Create(ctx context.Context, url *schema.UrlRequest, userID 
 	}, nil
 }
 
-func (s *urlService) Update(ctx context.Context, url *schema.UrlRequest, id uint) (*schema.UrlResponse, error) {
+func (s *urlService) Update(ctx context.Context, url *schema.UrlRequest, id uint) (*schema.UrlResponse, *utils.AppError) {
 	urlModel, err := s.urlRepo.FindByID(ctx, s.db, id)
 	if err != nil {
-		return nil, err
+		return nil, utils.InternalServerError("Error finding url", err)
 	}
 	urlModel.Label = url.Label
 	urlModel.URL = url.Url
@@ -69,7 +70,7 @@ func (s *urlService) Update(ctx context.Context, url *schema.UrlRequest, id uint
 	urlModel.Active = *url.Active
 	err = s.urlRepo.Update(ctx, s.db, urlModel)
 	if err != nil {
-		return nil, err
+		return nil, utils.InternalServerError("Error updating url", err)
 	}
 	return &schema.UrlResponse{
 		ID:          urlModel.ID,
@@ -82,18 +83,22 @@ func (s *urlService) Update(ctx context.Context, url *schema.UrlRequest, id uint
 	}, nil
 }
 
-func (s *urlService) Delete(ctx context.Context, id uint) error {
+func (s *urlService) Delete(ctx context.Context, id uint) *utils.AppError {
 	urlModel, err := s.urlRepo.FindByID(ctx, s.db, id)
 	if err != nil {
-		return err
+		return utils.NewAppError(http.StatusNotFound, utils.NotFound, "Url not found", err)
 	}
-	return s.urlRepo.Delete(ctx, s.db, urlModel)
+	err = s.urlRepo.Delete(ctx, s.db, urlModel)
+	if err != nil {
+		return utils.InternalServerError("Error deleting url", err)
+	}
+	return nil
 }
 
-func (s *urlService) FindByID(ctx context.Context, id uint) (*schema.UrlResponse, error) {
+func (s *urlService) FindByID(ctx context.Context, id uint) (*schema.UrlResponse, *utils.AppError) {
 	urlModel, err := s.urlRepo.FindByID(ctx, s.db, id)
 	if err != nil {
-		return nil, err
+		return nil, utils.NewAppError(http.StatusNotFound, utils.NotFound, "Url not found", err)
 	}
 	return &schema.UrlResponse{
 		ID:          urlModel.ID,
@@ -106,10 +111,10 @@ func (s *urlService) FindByID(ctx context.Context, id uint) (*schema.UrlResponse
 	}, nil
 }
 
-func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, error) {
+func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, *utils.AppError) {
 	urls, count, err := s.urlRepo.ListByUserID(ctx, s.db, userID, page, perPage, active, searchLabel, sortBy)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, utils.InternalServerError("Error listing urls", err)
 	}
 	var urlResponses []schema.UrlResponse
 	for _, url := range urls {
@@ -129,7 +134,7 @@ func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPag
 	return urlResponses, count, nil
 }
 
-func (s *urlService) GetUptimeStats(ctx context.Context, urlID uint, mode string, offset int) ([]models.UptimeStat, error) {
+func (s *urlService) GetUptimeStats(ctx context.Context, urlID uint, mode string, offset int) ([]models.UptimeStat, *utils.AppError) {
 	var targetDate time.Time
 
 	switch mode {
@@ -138,7 +143,7 @@ func (s *urlService) GetUptimeStats(ctx context.Context, urlID uint, mode string
 	case "month":
 		targetDate = time.Now().AddDate(0, -offset, 0)
 	default:
-		return nil, fmt.Errorf("invalid mode: %s", mode)
+		return nil, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid mode", nil)
 	}
 
 	logs, err := s.statusLogRepo.GetUptimeStats(ctx, s.db, urlID, mode, targetDate.UTC())
@@ -146,7 +151,7 @@ func (s *urlService) GetUptimeStats(ctx context.Context, urlID uint, mode string
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return []models.UptimeStat{}, nil
 		}
-		return nil, err
+		return nil, utils.InternalServerError("Error getting uptime stats", err)
 	}
 
 	return logs, nil

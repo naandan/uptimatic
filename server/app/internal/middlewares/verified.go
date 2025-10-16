@@ -12,7 +12,7 @@ func VerifiedMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimsVal, exists := c.Get("claims")
 		if !exists {
-			utils.ErrorResponse(c, http.StatusUnauthorized, utils.InvalidToken, "Missing token claims")
+			utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.InvalidToken, "Missing token claims", nil))
 			c.Abort()
 			return
 		}
@@ -28,13 +28,13 @@ func VerifiedMiddleware() gin.HandlerFunc {
 				verified = val
 			}
 		default:
-			utils.ErrorResponse(c, http.StatusUnauthorized, utils.InvalidToken, "Invalid claims type")
+			utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.InvalidToken, "Invalid claims type", nil))
 			c.Abort()
 			return
 		}
 
 		if !verified {
-			utils.ErrorResponse(c, http.StatusForbidden, utils.ForbiddenAction, "Email not verified")
+			utils.ErrorResponse(c, utils.NewAppError(http.StatusForbidden, utils.ForbiddenAction, "Email not verified", nil))
 			c.Abort()
 			return
 		}

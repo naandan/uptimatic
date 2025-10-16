@@ -38,18 +38,18 @@ func (h *authHandler) RegisterHandler(c *gin.Context) {
 	var req schema.RegisterRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return
 	}
 
 	if err := h.validate.Struct(req); err != nil {
-		utils.BindErrorResponse(c, err)
+		utils.BindErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
 	user, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, h.cfg.AppDomain)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusConflict, utils.Conflict, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 
@@ -60,18 +60,18 @@ func (h *authHandler) LoginHandler(c *gin.Context) {
 	var req schema.LoginRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return
 	}
 
 	if err := h.validate.Struct(req); err != nil {
-		utils.BindErrorResponse(c, err)
+		utils.BindErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
 	access, refresh, err := h.authService.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 
@@ -86,12 +86,12 @@ func (h *authHandler) LoginHandler(c *gin.Context) {
 func (h *authHandler) LogoutHandler(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "Missing refresh token")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "Missing refresh token", nil))
 		return
 	}
 
 	if err := h.authService.Logout(c.Request.Context(), refreshToken); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 
@@ -105,15 +105,15 @@ func (h *authHandler) RefreshHandler(c *gin.Context) {
 	if err != nil {
 		c.SetCookie("access_token", "", -1, "/", h.cfg.AppDomain, true, true)
 		c.SetCookie("refresh_token", "", -1, "/", h.cfg.AppDomain, true, true)
-		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "Missing refresh token")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "Missing refresh token", nil))
 		return
 	}
 
-	access, refresh, err := h.authService.Refresh(c.Request.Context(), refreshToken)
-	if err != nil {
+	access, refresh, errRef := h.authService.Refresh(c.Request.Context(), refreshToken)
+	if errRef != nil {
 		c.SetCookie("access_token", "", -1, "/", h.cfg.AppDomain, true, true)
 		c.SetCookie("refresh_token", "", -1, "/", h.cfg.AppDomain, true, true)
-		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, err.Error())
+		utils.ErrorResponse(c, errRef)
 		return
 	}
 
@@ -128,19 +128,19 @@ func (h *authHandler) RefreshHandler(c *gin.Context) {
 func (h *authHandler) ProfileHandler(c *gin.Context) {
 	userId, exists := c.Get("user_id")
 	if !exists {
-		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "User not authenticated")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "User not authenticated", nil))
 		return
 	}
 
 	userIdUint, ok := userId.(uint)
 	if !ok {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, "Invalid user ID type")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "User not authenticated", nil))
 		return
 	}
 
 	user, err := h.authService.Profile(c.Request.Context(), userIdUint)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (h *authHandler) ProfileHandler(c *gin.Context) {
 func (h *authHandler) VerifyHandler(c *gin.Context) {
 	token := c.Query("token")
 	if err := h.authService.VerifyEmail(c.Request.Context(), token); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 	utils.SuccessResponse(c, nil)
@@ -159,13 +159,13 @@ func (h *authHandler) VerifyHandler(c *gin.Context) {
 func (h *authHandler) ResendVerificationHandler(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	if userID == 0 {
-		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "User not authenticated")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "User not authenticated", nil))
 		return
 	}
 
 	ttl, err := h.authService.ResendVerificationEmail(c.Request.Context(), userID, h.cfg.AppDomain)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 	utils.SuccessResponse(c, gin.H{"ttl": ttl})
@@ -174,13 +174,13 @@ func (h *authHandler) ResendVerificationHandler(c *gin.Context) {
 func (h *authHandler) ResendVerificationEmailTTLHandler(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	if userID == 0 {
-		utils.ErrorResponse(c, http.StatusUnauthorized, utils.Unauthorized, "User not authenticated")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "User not authenticated", nil))
 		return
 	}
 
 	ttl, err := h.authService.ResendVerificationEmailTTL(c.Request.Context(), userID)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 	utils.SuccessResponse(c, gin.H{"ttl": ttl})
@@ -189,15 +189,15 @@ func (h *authHandler) ResendVerificationEmailTTLHandler(c *gin.Context) {
 func (h *authHandler) SendPasswordResetEmailHandler(c *gin.Context) {
 	var req schema.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		utils.BindErrorResponse(c, err)
+		utils.BindErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 	if err := h.authService.SendPasswordResetEmail(c.Request.Context(), req.Email, h.cfg.AppDomain); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 	utils.SuccessResponse(c, nil)
@@ -206,15 +206,15 @@ func (h *authHandler) SendPasswordResetEmailHandler(c *gin.Context) {
 func (h *authHandler) ResetPasswordHandler(c *gin.Context) {
 	var req schema.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		utils.BindErrorResponse(c, err)
+		utils.BindErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 	if err := h.authService.ResetPassword(c.Request.Context(), req.Token, req.Password); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 	utils.SuccessResponse(c, nil)
