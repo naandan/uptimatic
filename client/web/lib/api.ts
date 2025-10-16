@@ -44,7 +44,7 @@ api.interceptors.response.use(
         })
           .then(() => api(originalRequest))
           .catch(() =>
-            Promise.resolve({ success: false, error: { message: "Unauthorized", code: "UNAUTHORIZED" } })
+            Promise.resolve({ success: false, error: { message: "Unauthorized", code: res?.data.error.code } })
           );
       }
 
@@ -54,12 +54,12 @@ api.interceptors.response.use(
         await axios.post("/api/v1/auth/refresh", {}, { withCredentials: true });
         processQueue(null);
         return api(originalRequest);
-      } catch (refreshErr) {
+      } catch (refreshErr: any) {
         processQueue(refreshErr);
         failedQueue = [];
         return Promise.resolve({
           success: false,
-          error: { message: "Unauthorized", code: "UNAUTHORIZED" },
+          error: { message: "Unauthorized", code: refreshErr?.response.data.error.code },
         });
       } finally {
         isRefreshing = false;
