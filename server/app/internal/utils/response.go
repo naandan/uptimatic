@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,14 +12,14 @@ import (
 
 func SuccessResponse(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, gin.H{
-		"request_id": getRequestID(c),
+		"request_id": getRequestID(c.Request.Context()),
 		"data":       data,
 	})
 }
 
 func PaginatedResponse(c *gin.Context, data any, count, limit, page, totalPage int) {
 	c.JSON(http.StatusOK, gin.H{
-		"request_id": getRequestID(c),
+		"request_id": getRequestID(c.Request.Context()),
 		"data":       data,
 		"meta": gin.H{
 			"total":       count,
@@ -31,7 +32,7 @@ func PaginatedResponse(c *gin.Context, data any, count, limit, page, totalPage i
 
 func ErrorResponse(c *gin.Context, appErr *AppError) {
 	resp := gin.H{
-		"request_id": getRequestID(c),
+		"request_id": getRequestID(c.Request.Context()),
 		"error": gin.H{
 			"code":    appErr.Code,
 			"message": appErr.Message,
@@ -44,7 +45,7 @@ func ErrorResponse(c *gin.Context, appErr *AppError) {
 }
 
 func BindErrorResponse(c *gin.Context, appErr *AppError) {
-	requestID := getRequestID(c)
+	requestID := getRequestID(c.Request.Context())
 
 	if verrs, ok := appErr.Err.(validator.ValidationErrors); ok {
 		errors := make(map[string][]map[string]interface{})
@@ -97,11 +98,9 @@ func BindErrorResponse(c *gin.Context, appErr *AppError) {
 	ErrorResponse(c, appErr)
 }
 
-func getRequestID(c *gin.Context) string {
-	if reqID, exists := c.Get("request_id"); exists {
-		if idStr, ok := reqID.(string); ok {
-			return idStr
-		}
+func getRequestID(ctx context.Context) string {
+	if reqID, ok := ctx.Value("request_id").(string); ok {
+		return reqID
 	}
 	return uuid.New().String()
 }

@@ -35,7 +35,7 @@ func (h *TaskHandler) SendEmailHandler(ctx context.Context, t *asynq.Task) error
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal payload: %w", err)
 	}
-	utils.Info(nil, "Sending email", map[string]any{"to": payload.To, "subject": payload.Subject})
+	utils.Info(ctx, "Sending email", map[string]any{"to": payload.To, "subject": payload.Subject})
 	return h.mailTask.SendEmail(ctx, payload.To, payload.Subject, payload.Type, payload.Data)
 }
 
@@ -97,7 +97,7 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		return fmt.Errorf("failed to update URL: %w", err)
 	}
 
-	utils.Debug(nil, "URL checked", map[string]any{
+	utils.Debug(ctx, "URL checked", map[string]any{
 		"url":           payload.URL,
 		"status":        log.Status,
 		"response_time": log.ResponseTime,
@@ -122,11 +122,11 @@ func (h *TaskHandler) ValidateUptimeHandler(ctx context.Context, t *asynq.Task) 
 
 			task := asynq.NewTask(TaskCheckUptime, payload)
 			if _, err := h.client.Enqueue(task); err != nil {
-				utils.Error(nil, "failed to enqueue first check task", map[string]any{"url": url.URL, "error": err})
+				utils.Error(ctx, "failed to enqueue first check task", map[string]any{"url": url.URL, "error": err})
 				continue
 			}
 
-			utils.Debug(nil, "First uptime check scheduled", map[string]any{"url": url.URL})
+			utils.Debug(ctx, "First uptime check scheduled", map[string]any{"url": url.URL})
 			continue
 		}
 
@@ -140,11 +140,11 @@ func (h *TaskHandler) ValidateUptimeHandler(ctx context.Context, t *asynq.Task) 
 
 			task := asynq.NewTask(TaskCheckUptime, payload)
 			if _, err := h.client.Enqueue(task); err != nil {
-				utils.Error(nil, "failed to enqueue uptime check", map[string]any{"url": url.URL, "error": err})
+				utils.Error(ctx, "failed to enqueue uptime check", map[string]any{"url": url.URL, "error": err})
 				continue
 			}
 
-			utils.Debug(nil, "URL needs to be checked", map[string]any{"url": url.URL})
+			utils.Debug(ctx, "URL needs to be checked", map[string]any{"url": url.URL})
 		}
 	}
 
