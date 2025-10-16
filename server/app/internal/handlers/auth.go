@@ -106,7 +106,7 @@ func (h *authHandler) RefreshHandler(c *gin.Context) {
 	if err != nil {
 		c.SetCookie("access_token", "", -1, "/", h.cfg.AppDomain, true, true)
 		c.SetCookie("refresh_token", "", -1, "/", h.cfg.AppDomain, true, true)
-		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "Missing refresh token", nil))
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.InvalidCredentials, "Missing refresh token", nil))
 		return
 	}
 

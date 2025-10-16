@@ -50,6 +50,5 @@ export function getValidationErrors(fields?: ApiError["fields"]) {
 }
 
 export function getErrorMessage(code: string): string {
-  console.log(code);
   return MESSAGES[code] || "Terjadi kesalahan yang tidak diketahui.";
 }
