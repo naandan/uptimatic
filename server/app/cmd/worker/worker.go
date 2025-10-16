@@ -15,6 +15,7 @@ import (
 func Start() {
 	ctx := context.Background()
 	ctx = utils.WithTraceID(ctx)
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		utils.Fatal(ctx, "failed to load config", map[string]any{"error": err})
