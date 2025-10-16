@@ -24,7 +24,7 @@ export default function HeaderProfile() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-10 h-10 p-0 rounded-full">
+        <Button variant="ghost" className="w-10 h-10 p-0 rounded-full" aria-label="User menu">
           <User className="w-6 h-6" />
         </Button>
       </DropdownMenuTrigger>
