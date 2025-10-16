@@ -91,7 +91,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.Warn(ctx, "Login failed: user not found", map[string]any{"email": email})
-			return "", "", utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "email or password incorrect", err)
+			return "", "", utils.NewAppError(http.StatusUnauthorized, utils.InvalidCredentials, "email or password incorrect", err)
 		}
 		utils.Error(ctx, "Login DB error", map[string]any{"email": email, "err": err.Error()})
 		return "", "", utils.InternalServerError("Error finding user", err)
@@ -99,7 +99,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		utils.Warn(ctx, "Login failed: wrong password", map[string]any{"email": email})
-		return "", "", utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "email or password incorrect", err)
+		return "", "", utils.NewAppError(http.StatusUnauthorized, utils.InvalidCredentials, "email or password incorrect", err)
 	}
 
 	access, refresh, err := s.jwtUtil.GenerateTokens(user.ID, user.Verified)
