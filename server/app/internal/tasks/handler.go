@@ -127,7 +127,7 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 			Subject: "Uptime Alert - Website Down",
 			Type:    email.EmailDown,
 			Data: map[string]any{
-				"LogoURL":      fmt.Sprintf("%s/icon.png", h.cfg.AppDomain),
+				"LogoURL":      fmt.Sprintf("%s://%s/icon.png", h.cfg.AppScheme, h.cfg.AppDomain),
 				"Label":        payload.Label,
 				"URL":          payload.URL,
 				"Status":       log.Status,

@@ -2,9 +2,9 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
 import { ApiResponse } from "@/types/response";
 
 let isRefreshing = false;
-let failedQueue: { resolve: (value?: unknown) => void; reject: (reason?: unknown) => void }[] = [];
+let failedQueue: { resolve: (value?: any) => void; reject: (err: any) => void }[] = [];
 
-const processQueue = (error: AxiosError | null) => {
+const processQueue = (error: any | null) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve();
@@ -20,47 +20,47 @@ const api: AxiosInstance = axios.create({
 api.interceptors.response.use(
   (response) => {
     const data = response.data || {};
-    const normalized: ApiResponse =  {
+    const normalized: ApiResponse = {
       success: true,
       requestId: data.request_id || null,
       data: data.data || null,
       meta: data.meta || null,
       error: null,
-    }
+    };
     return normalized as unknown as AxiosResponse<ApiResponse>;
   },
 
-  async (error: AxiosError|any) => {
-    const originalRequest = error.config as any;
+  async (error: AxiosError | any) => {
+    const originalRequest = error.config;
     const res = error.response;
     const status = res?.status;
 
     if (status === 401 && !originalRequest?._retry) {
+      originalRequest._retry = true;
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then(() => api(originalRequest))
-          .catch((err) => Promise.reject(err));
+          .catch(() =>
+            Promise.resolve({ success: false, error: { message: "Unauthorized", code: "UNAUTHORIZED" } })
+          );
       }
 
-      originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        await api.post("/auth/refresh");
+        await axios.post("/api/v1/auth/refresh", {}, { withCredentials: true });
         processQueue(null);
         return api(originalRequest);
       } catch (refreshErr) {
-        processQueue(refreshErr as AxiosError);
+        processQueue(refreshErr);
         failedQueue = [];
-
-        if ((refreshErr as AxiosError).response?.status === 401) {
-          console.warn("Refresh token invalid — forcing logout");
-          // window.location.href = "/auth/login";
-        }
-
-        return Promise.reject(refreshErr);
+        return Promise.resolve({
+          success: false,
+          error: { message: "Unauthorized", code: "UNAUTHORIZED" },
+        });
       } finally {
         isRefreshing = false;
       }
@@ -68,10 +68,6 @@ api.interceptors.response.use(
 
     const payload = res?.data || {};
     const errObj = payload.error || {};
-
-    if (status && status >= 500) {
-      console.error("Server Error:", error.message);
-    }
 
     const normalizedError: ApiResponse = {
       success: false,
@@ -84,9 +80,8 @@ api.interceptors.response.use(
         status: status || 0,
       },
     };
-    
-    // return Promise.reject(error);
-    return Promise.resolve(normalizedError as unknown as AxiosResponse<ApiResponse>);
+
+    return Promise.resolve(normalizedError);
   }
 );
 

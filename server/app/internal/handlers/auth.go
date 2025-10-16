@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"uptimatic/internal/config"
 	"uptimatic/internal/schema"
@@ -47,7 +48,7 @@ func (h *authHandler) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, h.cfg.AppDomain)
+	user, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, fmt.Sprintf("%s://%s", h.cfg.AppScheme, h.cfg.AppDomain))
 	if err != nil {
 		utils.ErrorResponse(c, err)
 		return
@@ -163,7 +164,7 @@ func (h *authHandler) ResendVerificationHandler(c *gin.Context) {
 		return
 	}
 
-	ttl, err := h.authService.ResendVerificationEmail(c.Request.Context(), userID, h.cfg.AppDomain)
+	ttl, err := h.authService.ResendVerificationEmail(c.Request.Context(), userID, fmt.Sprintf("%s://%s", h.cfg.AppScheme, h.cfg.AppDomain))
 	if err != nil {
 		utils.ErrorResponse(c, err)
 		return
@@ -196,7 +197,7 @@ func (h *authHandler) SendPasswordResetEmailHandler(c *gin.Context) {
 		utils.BindErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
-	if err := h.authService.SendPasswordResetEmail(c.Request.Context(), req.Email, h.cfg.AppDomain); err != nil {
+	if err := h.authService.SendPasswordResetEmail(c.Request.Context(), req.Email, fmt.Sprintf("%s://%s", h.cfg.AppScheme, h.cfg.AppDomain)); err != nil {
 		utils.ErrorResponse(c, err)
 		return
 	}
