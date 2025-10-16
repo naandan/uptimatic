@@ -32,18 +32,18 @@ func NewURLHandler(urlService services.URLService, validate *validator.Validate)
 func (h *urlHandler) CreateHandler(c *gin.Context) {
 	var urlRequest schema.UrlRequest
 	if err := c.ShouldBindJSON(&urlRequest); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return
 	}
 	if err := h.validate.Struct(urlRequest); err != nil {
-		utils.BindErrorResponse(c, err)
+		utils.BindErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
 	userId := c.GetUint("user_id")
 	urlResponse, err := h.urlService.Create(c.Request.Context(), &urlRequest, userId)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 
@@ -54,23 +54,23 @@ func (h *urlHandler) UpdateHandler(c *gin.Context) {
 	id := c.Param("id")
 	idUint, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
 	var urlRequest schema.UrlRequest
 	if err := c.ShouldBindJSON(&urlRequest); err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return
 	}
 	if err := h.validate.Struct(urlRequest); err != nil {
-		utils.BindErrorResponse(c, err)
+		utils.BindErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
-	urlResponse, err := h.urlService.Update(c.Request.Context(), &urlRequest, uint(idUint))
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+	urlResponse, errSvc := h.urlService.Update(c.Request.Context(), &urlRequest, uint(idUint))
+	if errSvc != nil {
+		utils.ErrorResponse(c, errSvc)
 		return
 	}
 
@@ -81,12 +81,12 @@ func (h *urlHandler) DeleteHandler(c *gin.Context) {
 	id := c.Param("id")
 	idUint, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
 	if err := h.urlService.Delete(c.Request.Context(), uint(idUint)); err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+		utils.ErrorResponse(c, err)
 		return
 	}
 
@@ -97,13 +97,13 @@ func (h *urlHandler) GetHandler(c *gin.Context) {
 	id := c.Param("id")
 	idUint, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
-	urlResponse, err := h.urlService.FindByID(c.Request.Context(), uint(idUint))
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+	urlResponse, errSvc := h.urlService.FindByID(c.Request.Context(), uint(idUint))
+	if errSvc != nil {
+		utils.ErrorResponse(c, errSvc)
 		return
 	}
 	utils.SuccessResponse(c, urlResponse)
@@ -112,12 +112,12 @@ func (h *urlHandler) GetHandler(c *gin.Context) {
 func (h *urlHandler) ListHandler(c *gin.Context) {
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil || page < 1 {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "Invalid page")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid page", err))
 		return
 	}
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if err != nil || limit < 1 {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "Invalid limit")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid limit", err))
 		return
 	}
 
@@ -138,9 +138,9 @@ func (h *urlHandler) ListHandler(c *gin.Context) {
 	searchLabel := c.Query("q")
 	sortBy := c.DefaultQuery("sort", "label")
 
-	urls, count, err := h.urlService.ListByUserID(c.Request.Context(), c.GetUint("user_id"), page, limit, active, searchLabel, sortBy)
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+	urls, count, errSvc := h.urlService.ListByUserID(c.Request.Context(), c.GetUint("user_id"), page, limit, active, searchLabel, sortBy)
+	if errSvc != nil {
+		utils.ErrorResponse(c, errSvc)
 		return
 	}
 
@@ -153,20 +153,20 @@ func (h *urlHandler) GetUptimeStats(c *gin.Context) {
 	id := c.Param("id")
 
 	if mode != "day" && mode != "month" {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, "invalid mode")
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid mode", nil))
 		return
 	}
 
 	offset, _ := strconv.Atoi(offsetStr)
 	idUint, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, utils.ValidationError, err.Error())
+		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
-	stats, err := h.urlService.GetUptimeStats(c.Request.Context(), uint(idUint), mode, offset)
-	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, utils.InternalError, err.Error())
+	stats, errSvc := h.urlService.GetUptimeStats(c.Request.Context(), uint(idUint), mode, offset)
+	if errSvc != nil {
+		utils.ErrorResponse(c, errSvc)
 		return
 	}
 

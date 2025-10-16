@@ -1,10 +1,10 @@
 package utils
 
 import (
+	"context"
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -35,44 +35,40 @@ func InitLogger(levelStr string) {
 	// Logger = log.Output(os.Stdout)
 }
 
-func commonFields(c *gin.Context, extra map[string]any) map[string]any {
+func commonFields(ctx context.Context, extra map[string]any) map[string]any {
 	fields := map[string]any{}
-
-	if c != nil {
-		if reqID, exists := c.Get("request_id"); exists {
-			fields["request_id"] = reqID
+	if ctx != nil {
+		if reqID, ok := ctx.Value(TraceKey).(string); ok {
+			fields[string(TraceKey)] = reqID
 		}
-		fields["endpoint"] = c.FullPath()
 	}
-
 	if extra != nil {
 		fields["extra"] = extra
 	}
-
 	return fields
 }
 
-func Debug(c *gin.Context, msg string, extra map[string]any) {
+func Debug(c context.Context, msg string, extra map[string]any) {
 	fields := commonFields(c, extra)
 	Logger.Debug().Fields(fields).Msg(msg)
 }
 
-func Info(c *gin.Context, msg string, extra map[string]any) {
+func Info(c context.Context, msg string, extra map[string]any) {
 	fields := commonFields(c, extra)
 	Logger.Info().Fields(fields).Msg(msg)
 }
 
-func Warn(c *gin.Context, msg string, extra map[string]any) {
+func Warn(c context.Context, msg string, extra map[string]any) {
 	fields := commonFields(c, extra)
 	Logger.Warn().Fields(fields).Msg(msg)
 }
 
-func Error(c *gin.Context, msg string, extra map[string]any) {
+func Error(c context.Context, msg string, extra map[string]any) {
 	fields := commonFields(c, extra)
 	Logger.Error().Fields(fields).Msg(msg)
 }
 
-func Fatal(c *gin.Context, msg string, extra map[string]any) {
+func Fatal(c context.Context, msg string, extra map[string]any) {
 	fields := commonFields(c, extra)
 	Logger.Fatal().Fields(fields).Msg(msg)
 }

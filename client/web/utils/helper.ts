@@ -2,7 +2,7 @@ import { ApiError, ValidationFieldError } from "@/types/response";
 
 const VALIDATION: Record<string, string | ((param?: string) => string)> = {
   REQUIRED: "Tidak boleh kosong.",
-  INVALID_TYPE: "Tipe data tidak valid.",
+  INVALID_TYPE: "Data tidak valid.",
   INVALID_FORMAT: "Format tidak valid.",
   MIN_LENGTH: (min?: string) => `Minimal ${min} karakter.`,
   MAX_LENGTH: (max?: string) => `Maksimal ${max} karakter.`,

@@ -3,11 +3,11 @@ import { ApiResponse } from "@/types/response";
 import { URLRequest, URLResponse, URLStats } from "@/types/url";
 
 export const urlService = {
-  create: async (data: URLRequest): Promise<ApiResponse<URLResponse>> => {
+  create: async (data: Partial<URLRequest>): Promise<ApiResponse<URLResponse>> => {
     return await api.post("/urls", data);
   },
 
-  update: async (id: number, data: URLRequest): Promise<ApiResponse<URLResponse>> => {
+  update: async (id: number|undefined, data: Partial<URLRequest>): Promise<ApiResponse<URLResponse>> => {
     return await api.put(`/urls/${id}`, data);
   },
 

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,14 +12,14 @@ import (
 
 func SuccessResponse(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, gin.H{
-		"request_id": getRequestID(c),
+		"request_id": getRequestID(c.Request.Context()),
 		"data":       data,
 	})
 }
 
 func PaginatedResponse(c *gin.Context, data any, count, limit, page, totalPage int) {
 	c.JSON(http.StatusOK, gin.H{
-		"request_id": getRequestID(c),
+		"request_id": getRequestID(c.Request.Context()),
 		"data":       data,
 		"meta": gin.H{
 			"total":       count,
@@ -29,20 +30,24 @@ func PaginatedResponse(c *gin.Context, data any, count, limit, page, totalPage i
 	})
 }
 
-func ErrorResponse(c *gin.Context, status int, code, message string) {
-	c.JSON(status, gin.H{
-		"request_id": getRequestID(c),
+func ErrorResponse(c *gin.Context, appErr *AppError) {
+	resp := gin.H{
+		"request_id": getRequestID(c.Request.Context()),
 		"error": gin.H{
-			"code":    code,
-			"message": message,
+			"code":    appErr.Code,
+			"message": appErr.Message,
 		},
-	})
+	}
+	if appErr.Fields != nil {
+		resp["error"].(gin.H)["fields"] = appErr.Fields
+	}
+	c.JSON(appErr.Status, resp)
 }
 
-func BindErrorResponse(c *gin.Context, err error) {
-	requestID := getRequestID(c)
+func BindErrorResponse(c *gin.Context, appErr *AppError) {
+	requestID := getRequestID(c.Request.Context())
 
-	if verrs, ok := err.(validator.ValidationErrors); ok {
+	if verrs, ok := appErr.Err.(validator.ValidationErrors); ok {
 		errors := make(map[string][]map[string]interface{})
 
 		for _, e := range verrs {
@@ -79,10 +84,10 @@ func BindErrorResponse(c *gin.Context, err error) {
 			}
 		}
 
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
+		c.JSON(appErr.Status, gin.H{
 			"request_id": requestID,
 			"error": gin.H{
-				"code":    ValidationError,
+				"code":    appErr.Code,
 				"message": "Payload validation failed",
 				"fields":  errors,
 			},
@@ -90,14 +95,12 @@ func BindErrorResponse(c *gin.Context, err error) {
 		return
 	}
 
-	ErrorResponse(c, http.StatusBadRequest, ValidationError, err.Error())
+	ErrorResponse(c, appErr)
 }
 
-func getRequestID(c *gin.Context) string {
-	if reqID, exists := c.Get("request_id"); exists {
-		if idStr, ok := reqID.(string); ok {
-			return idStr
-		}
+func getRequestID(ctx context.Context) string {
+	if reqID, ok := ctx.Value(TraceKey).(string); ok {
+		return reqID
 	}
 	return uuid.New().String()
 }
