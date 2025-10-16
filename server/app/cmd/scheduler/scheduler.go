@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"context"
 	"uptimatic/internal/config"
 	"uptimatic/internal/db"
 	"uptimatic/internal/tasks"
@@ -10,6 +11,9 @@ import (
 )
 
 func Start() {
+	ctx := context.Background()
+	ctx = utils.WithTraceID(ctx)
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -24,10 +28,10 @@ func Start() {
 		asynq.NewTask(tasks.TaskValidateUptime, nil),
 	)
 	if err != nil {
-		utils.Fatal(nil, "failed to register task", map[string]any{"error": err})
+		utils.Fatal(ctx, "failed to register task", map[string]any{"error": err})
 		return
 	}
 
-	utils.Debug(nil, "Scheduler started", nil)
+	utils.Debug(ctx, "Scheduler started", nil)
 	scheduler.Run()
 }
