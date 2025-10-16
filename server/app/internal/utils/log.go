@@ -38,8 +38,8 @@ func InitLogger(levelStr string) {
 func commonFields(ctx context.Context, extra map[string]any) map[string]any {
 	fields := map[string]any{}
 	if ctx != nil {
-		if reqID, ok := ctx.Value("request_id").(string); ok {
-			fields["request_id"] = reqID
+		if reqID, ok := ctx.Value(TraceKey).(string); ok {
+			fields[string(TraceKey)] = reqID
 		}
 	}
 	if extra != nil {

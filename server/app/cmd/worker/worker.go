@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"uptimatic/internal/config"
 	"uptimatic/internal/db"
 	"uptimatic/internal/email"
@@ -12,9 +13,11 @@ import (
 )
 
 func Start() {
+	ctx := context.Background()
+	ctx = utils.WithTraceID(ctx)
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		utils.Fatal(nil, "failed to load config", map[string]any{"error": err})
+		utils.Fatal(ctx, "failed to load config", map[string]any{"error": err})
 	}
 
 	utils.InitLogger(cfg.AppLogLevel)
@@ -27,7 +30,7 @@ func Start() {
 
 	mailTask, err := email.NewEmailTask(&cfg)
 	if err != nil {
-		utils.Fatal(nil, "failed to create email task", map[string]any{"error": err})
+		utils.Fatal(ctx, "failed to create email task", map[string]any{"error": err})
 	}
 
 	handler := tasks.NewTaskHandler(&cfg, psql, client, mailTask, urlRepo, logRepo)
@@ -35,12 +38,12 @@ func Start() {
 	srv := db.NewAsynqServer(&cfg)
 	mux := asynq.NewServeMux()
 
-	mux.HandleFunc(tasks.TaskSendEmail, handler.SendEmailHandler)
-	mux.HandleFunc(tasks.TaskValidateUptime, handler.ValidateUptimeHandler)
-	mux.HandleFunc(tasks.TaskCheckUptime, handler.CheckUptimeHandler)
+	mux.HandleFunc(tasks.TaskSendEmail, tasks.MiddlewareHandler(handler.SendEmailHandler))
+	mux.HandleFunc(tasks.TaskValidateUptime, tasks.MiddlewareHandler(handler.ValidateUptimeHandler))
+	mux.HandleFunc(tasks.TaskCheckUptime, tasks.MiddlewareHandler(handler.CheckUptimeHandler))
 
-	utils.Debug(nil, "Worker started", nil)
+	utils.Debug(ctx, "Worker started", nil)
 	if err := srv.Run(mux); err != nil {
-		utils.Fatal(nil, "failed to start server", map[string]any{"error": err})
+		utils.Fatal(ctx, "failed to start server", map[string]any{"error": err})
 	}
 }

@@ -99,7 +99,7 @@ func BindErrorResponse(c *gin.Context, appErr *AppError) {
 }
 
 func getRequestID(ctx context.Context) string {
-	if reqID, ok := ctx.Value("request_id").(string); ok {
+	if reqID, ok := ctx.Value(TraceKey).(string); ok {
 		return reqID
 	}
 	return uuid.New().String()
