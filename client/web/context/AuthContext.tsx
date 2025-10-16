@@ -17,14 +17,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const getProfile = async () => {
       const res = await authService.profile();
-      if (!res.success) {
-        setIsLoading(false);
-        return;
-      } else {
+
+      if (res.success) {
         setIsLoggedIn(true);
-        setIsLoading(false);
+      } else {
+        setIsLoggedIn(false);
       }
+
+      setIsLoading(false);
     };
+
     getProfile();
   }, []);
 
