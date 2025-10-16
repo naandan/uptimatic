@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlusCircle, ChevronLeft, ChevronRight, Loader2, InfoIcon } from "lucide-react";
 import URLCard from "./URLCard";
 import { AddEditDialog, DeleteDialog } from "./URLDialog";
 import { useURLs } from "@/hooks/useURLs";
@@ -135,9 +135,15 @@ export default function URLList() {
 
       {/* Grid */}
       {loading ? (
-        <p className="text-center text-slate-500 mt-6">Loading...</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-6 h-6 text-slate-500 animate-spin" />
+          <p className="text-center text-slate-500 mt-2">Loading...</p>
+        </div>
       ) : urls.length === 0 ? (
-        <p className="text-center text-slate-500 mt-6">Tidak ada data</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+          <InfoIcon className="w-6 h-6 text-slate-500 mb-2" />
+          <p className="text-center text-slate-500">Tidak ada URL</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {urls.map((url: URLResponse) => (

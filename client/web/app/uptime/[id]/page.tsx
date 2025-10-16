@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { urlService } from "@/lib/services/url";
 import { formatDateGMT7, formatDateTimeGMT7, formatTimeGMT7 } from "@/utils/format";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, InfoIcon, Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
@@ -84,9 +84,15 @@ export default function UptimeStats() {
       </div>
 
       {loading ? (
-        <p className="text-center text-slate-500">Loading...</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-6 h-6 text-slate-500 animate-spin" />
+          <p className="text-center text-slate-500 mt-2">Loading...</p>
+        </div>
       ) : data.length === 0 ? (
-        <p className="text-center text-slate-500">Tidak ada data</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+          <InfoIcon className="w-6 h-6 text-slate-500 mb-2" />
+          <p className="text-center text-slate-500">Tidak ada data</p>
+        </div>
       ) : (
         <ResponsiveContainer width="100%" height={400}>
           <BarChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
