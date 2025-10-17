@@ -1,6 +1,6 @@
 FROM golang:1.24.6-alpine AS builder
 WORKDIR /app
-RUN apk add --no-cache git
+RUN apk add --no-cache git tzdata
 COPY app .
 RUN go mod download
 RUN go build -o uptimatic .

@@ -166,7 +166,11 @@ func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPag
 func (s *urlService) GetUptimeStats(ctx context.Context, urlID uint, mode string, offset int) ([]models.UptimeStat, *utils.AppError) {
 	utils.Info(ctx, "Fetching uptime stats", map[string]any{"url_id": urlID, "mode": mode, "offset": offset})
 
-	loc, _ := time.LoadLocation("Asia/Jakarta")
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		utils.Error(ctx, "Failed to load location", map[string]any{"err": err.Error()})
+		return nil, utils.InternalServerError("Error loading location", err)
+	}
 	var truncUnit string
 	var startLocal, endLocal, start, end time.Time
 	targetDate := time.Now().In(loc)
