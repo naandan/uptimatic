@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 	"uptimatic/internal/email"
+	"uptimatic/internal/google"
 	"uptimatic/internal/models"
 	"uptimatic/internal/repositories"
 	"uptimatic/internal/tasks"
@@ -30,6 +32,8 @@ type AuthService interface {
 	ResendVerificationEmailTTL(ctx context.Context, userId uint) (int, *utils.AppError)
 	SendPasswordResetEmail(ctx context.Context, userEmail, appUrl string) *utils.AppError
 	ResetPassword(ctx context.Context, token, password string) *utils.AppError
+	GoogleLogin(ctx context.Context) string
+	GoogleCallback(ctx context.Context, code string) (string, string, *utils.AppError)
 }
 
 type authService struct {
@@ -38,10 +42,11 @@ type authService struct {
 	redis       *redis.Client
 	jwtUtil     utils.JWTUtil
 	asyncClient *asynq.Client
+	google      *google.GoogleCLient
 }
 
-func NewAuthService(db *gorm.DB, userRepo repositories.UserRepository, redis *redis.Client, jwtUtil utils.JWTUtil, asyncClient *asynq.Client) AuthService {
-	return &authService{db, userRepo, redis, jwtUtil, asyncClient}
+func NewAuthService(db *gorm.DB, userRepo repositories.UserRepository, redis *redis.Client, jwtUtil utils.JWTUtil, asyncClient *asynq.Client, google *google.GoogleCLient) AuthService {
+	return &authService{db, userRepo, redis, jwtUtil, asyncClient, google}
 }
 
 func (s *authService) Register(ctx context.Context, userEmail, password, appUrl string) (*models.User, *utils.AppError) {
@@ -354,4 +359,54 @@ func (s *authService) ResetPassword(ctx context.Context, token, password string)
 
 	utils.Info(ctx, "Password reset successfully", map[string]any{"user_id": userId})
 	return nil
+}
+
+func (s *authService) GoogleLogin(ctx context.Context) string {
+	url := s.google.AuthCodeURL("randomstate")
+	return url
+}
+
+func (s *authService) GoogleCallback(ctx context.Context, code string) (string, string, *utils.AppError) {
+	token, err := s.google.Exchange(ctx, code)
+	if err != nil {
+		utils.Error(ctx, "Token exchange failed", map[string]any{"err": err.Error()})
+		return "", "", utils.InternalServerError("Token exchange failed", err)
+	}
+
+	client := s.google.Client(ctx, token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		utils.Error(ctx, "Failed to get user info", map[string]any{"err": err.Error()})
+		return "", "", utils.InternalServerError("Failed to get user info", err)
+	}
+	defer resp.Body.Close()
+
+	var oauthUser map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&oauthUser); err != nil {
+		utils.Error(ctx, "Failed to decode user info", map[string]any{"err": err.Error()})
+		return "", "", utils.InternalServerError("Failed to decode user info", err)
+	}
+
+	email := oauthUser["email"].(string)
+	user, err := s.userRepo.FindByEmail(ctx, s.db, email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			user = &models.User{Email: email, Verified: true}
+			if err := s.userRepo.Create(ctx, s.db, user); err != nil {
+				utils.Error(ctx, "Failed to create user", map[string]any{"err": err.Error()})
+				return "", "", utils.InternalServerError("Failed to create user", err)
+			}
+		} else {
+			utils.Error(ctx, "Failed to find user", map[string]any{"err": err.Error()})
+			return "", "", utils.InternalServerError("Failed to find user", err)
+		}
+	}
+
+	access, refresh, err := s.jwtUtil.GenerateTokens(user.ID, user.Verified)
+	if err != nil {
+		utils.Error(ctx, "Failed to generate token", map[string]any{"err": err.Error()})
+		return "", "", utils.InternalServerError("Failed to generate token", err)
+	}
+
+	return access, refresh, nil
 }

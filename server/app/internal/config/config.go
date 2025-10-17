@@ -34,6 +34,9 @@ type Config struct {
 	EmailSmtpUser string
 	EmailSmtpPass string
 	EmailFrom     string
+
+	GoogleClientId     string
+	GoogleClientSecret string
 }
 
 func LoadConfig() (Config, error) {
@@ -76,6 +79,9 @@ func LoadConfig() (Config, error) {
 		EmailSmtpUser: viper.GetString("EMAIL_SMTP_USER"),
 		EmailSmtpPass: viper.GetString("EMAIL_SMTP_PASS"),
 		EmailFrom:     viper.GetString("EMAIL_FROM"),
+
+		GoogleClientId:     viper.GetString("GOOGLE_CLIENT_ID"),
+		GoogleClientSecret: viper.GetString("GOOGLE_CLIENT_SECRET"),
 	}
 
 	return cfg, nil
