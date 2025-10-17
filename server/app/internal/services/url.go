@@ -166,18 +166,30 @@ func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPag
 func (s *urlService) GetUptimeStats(ctx context.Context, urlID uint, mode string, offset int) ([]models.UptimeStat, *utils.AppError) {
 	utils.Info(ctx, "Fetching uptime stats", map[string]any{"url_id": urlID, "mode": mode, "offset": offset})
 
-	var targetDate time.Time
+	loc, _ := time.LoadLocation("Asia/Jakarta")
+	var truncUnit string
+	var startLocal, endLocal, start, end time.Time
+	targetDate := time.Now().In(loc)
 	switch mode {
 	case "day":
-		targetDate = time.Now().AddDate(0, 0, -offset)
+		truncUnit = "hour"
+		targetDate = targetDate.AddDate(0, 0, -offset)
+		startLocal = time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, loc)
+		endLocal = startLocal.Add(24 * time.Hour)
 	case "month":
-		targetDate = time.Now().AddDate(0, -offset, 0)
+		truncUnit = "day"
+		targetDate = targetDate.AddDate(0, -offset, 0)
+		startLocal = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, loc)
+		endLocal = startLocal.AddDate(0, 1, 0)
 	default:
 		utils.Warn(ctx, "Invalid mode for uptime stats", map[string]any{"mode": mode})
 		return nil, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid mode", nil)
 	}
 
-	stats, err := s.statusLogRepo.GetUptimeStats(ctx, s.db, urlID, mode, targetDate.UTC())
+	start = startLocal.UTC()
+	end = endLocal.UTC()
+
+	stats, err := s.statusLogRepo.GetUptimeStats(ctx, s.db, urlID, truncUnit, start, end)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.Warn(ctx, "No uptime stats found", map[string]any{"url_id": urlID})
