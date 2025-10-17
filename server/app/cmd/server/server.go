@@ -1,9 +1,11 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"uptimatic/internal/config"
 	"uptimatic/internal/db"
+	"uptimatic/internal/google"
 	"uptimatic/internal/handlers"
 	"uptimatic/internal/middlewares"
 	"uptimatic/internal/repositories"
@@ -28,13 +30,14 @@ func Start() {
 	asyncClient := db.NewAsynqClient(&cfg)
 
 	jwtUtil := utils.NewJWTUtil(cfg.AuthJWTSecret, cfg.AuthAccessTokenExpiration, cfg.AuthRefreshTokenExpiration)
+	googleClient := google.NewGoogleClient(&cfg)
 	validate := validator.New()
 
 	userRepo := repositories.NewUserRepository()
 	urlRepo := repositories.NewUrlRepository()
 	logRepo := repositories.NewLogRepository()
 
-	authService := services.NewAuthService(pgsql, userRepo, redis, jwtUtil, asyncClient)
+	authService := services.NewAuthService(pgsql, userRepo, redis, jwtUtil, asyncClient, googleClient)
 	urlService := services.NewUrlService(pgsql, urlRepo, logRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, validate, &cfg)
@@ -58,6 +61,6 @@ func Start() {
 
 	addr := ":" + fmt.Sprint(cfg.AppPort)
 	if err := r.Run(addr); err != nil {
-		utils.Error(nil, "failed to start server", map[string]any{"error": err})
+		utils.Error(context.Background(), "failed to start server", map[string]any{"error": err})
 	}
 }

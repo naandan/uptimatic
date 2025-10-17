@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { getErrorMessage, getValidationErrors } from "@/utils/helper";
 import { ErrorInput } from "@/types/response";
 import ErrorInputMessage from "./ErrorInputMessage";
+import { FcGoogle } from "react-icons/fc";
 
 interface AuthFormProps {
   type: "login" | "register";
@@ -140,10 +141,28 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                   ? "Masuk"
                   : "Daftar"}
               </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-slate-500">
+                    Atau masuk dengan
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Button variant="outline" onClick={() => window.location.replace("/api/v1/auth/google/login")} type="button" className="w-full">
+                  <FcGoogle size={24} />
+                  Google
+                </Button>
+              </div>
             </form>
           </CardContent>
 
-          <CardFooter className="text-center text-sm text-muted-foreground">
+          <CardFooter className="text-sm text-muted-foreground flex flex-col">
             {type === "login" ? (
               <p>
                 Belum punya akun?{" "}

@@ -23,6 +23,8 @@ type AuthHandler interface {
 	ResendVerificationEmailTTLHandler(c *gin.Context)
 	SendPasswordResetEmailHandler(c *gin.Context)
 	ResetPasswordHandler(c *gin.Context)
+	GoogleLoginHandler(c *gin.Context)
+	GoogleCallbackHandler(c *gin.Context)
 }
 
 type authHandler struct {
@@ -219,4 +221,21 @@ func (h *authHandler) ResetPasswordHandler(c *gin.Context) {
 		return
 	}
 	utils.SuccessResponse(c, nil)
+}
+
+func (h *authHandler) GoogleLoginHandler(c *gin.Context) {
+	url := h.authService.GoogleLogin(c.Request.Context())
+	c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+func (h *authHandler) GoogleCallbackHandler(c *gin.Context) {
+	code := c.Query("code")
+	access, refresh, err := h.authService.GoogleCallback(c.Request.Context(), code)
+	if err != nil {
+		utils.ErrorResponse(c, err)
+		return
+	}
+	c.SetCookie("access_token", access, int(h.cfg.AuthAccessTokenExpiration), "/", h.cfg.AppDomain, true, true)
+	c.SetCookie("refresh_token", refresh, int(h.cfg.AuthRefreshTokenExpiration), "/", h.cfg.AppDomain, true, true)
+	c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s://%s/uptime", h.cfg.AppScheme, h.cfg.AppDomain))
 }
