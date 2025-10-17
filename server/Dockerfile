@@ -1,6 +1,6 @@
 FROM golang:1.24.6-alpine AS builder
 WORKDIR /app
-RUN apk add --no-cache git tzdata
+RUN apk add --no-cache git
 COPY app .
 RUN go mod download
 RUN go build -o uptimatic .
@@ -17,7 +17,7 @@ LABEL org.opencontainers.image.url="https://uptimatic.aeria.my.id"
 LABEL org.opencontainers.image.source="https://github.com/naandan/uptimatic"
 LABEL org.opencontainers.image.documentation="https://docs.uptimatic.aeria.my.id"
 
-RUN apk add --no-cache supervisor bash curl shadow
+RUN apk add --no-cache supervisor bash curl shadow tzdata
 
 RUN addgroup -S uptimatic && adduser -S -G uptimatic uptimatic
 
