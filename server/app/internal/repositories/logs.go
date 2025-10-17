@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 	"time"
 	"uptimatic/internal/models"
 
@@ -13,7 +12,7 @@ type StatusLogRepository interface {
 	Create(ctx context.Context, tx *gorm.DB, log *models.StatusLog) error
 	GetByID(ctx context.Context, tx *gorm.DB, id uint) (*models.StatusLog, error)
 	ListByURLID(ctx context.Context, tx *gorm.DB, urlID uint) ([]models.StatusLog, error)
-	GetUptimeStats(ctx context.Context, tx *gorm.DB, urlID uint, mode string, targetDate time.Time) ([]models.UptimeStat, error)
+	GetUptimeStats(ctx context.Context, tx *gorm.DB, urlID uint, truncUnit string, start, end time.Time) ([]models.UptimeStat, error)
 }
 
 type statusLogRepository struct{}
@@ -44,24 +43,8 @@ func (r *statusLogRepository) ListByURLID(ctx context.Context, tx *gorm.DB, urlI
 	return logs, nil
 }
 
-func (r *statusLogRepository) GetUptimeStats(ctx context.Context, tx *gorm.DB, urlID uint, mode string, targetDate time.Time) ([]models.UptimeStat, error) {
+func (r *statusLogRepository) GetUptimeStats(ctx context.Context, tx *gorm.DB, urlID uint, truncUnit string, start, end time.Time) ([]models.UptimeStat, error) {
 	var results []models.UptimeStat
-
-	var truncUnit string
-	var start, end time.Time
-
-	switch mode {
-	case "day":
-		truncUnit = "hour"
-		start = targetDate.Truncate(24 * time.Hour)
-		end = start.Add(24 * time.Hour)
-	case "month":
-		truncUnit = "day"
-		start = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-		end = start.AddDate(0, 1, 0)
-	default:
-		return nil, fmt.Errorf("invalid mode: %s", mode)
-	}
 
 	query := `
 		SELECT
