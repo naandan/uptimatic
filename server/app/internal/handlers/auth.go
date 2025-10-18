@@ -78,8 +78,8 @@ func (h *authHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("access_token", access, int(h.cfg.AuthAccessTokenExpiration), "/", h.cfg.AppDomain, true, true)
-	c.SetCookie("refresh_token", refresh, int(h.cfg.AuthRefreshTokenExpiration), "/", h.cfg.AppDomain, true, true)
+	c.SetCookie("access_token", access, int(h.cfg.AuthAccessTokenExpiration.Seconds()), "/", h.cfg.AppDomain, true, true)
+	c.SetCookie("refresh_token", refresh, int(h.cfg.AuthRefreshTokenExpiration.Seconds()), "/", h.cfg.AppDomain, true, true)
 	utils.SuccessResponse(c, gin.H{
 		"access_token":  access,
 		"refresh_token": refresh,
@@ -120,8 +120,8 @@ func (h *authHandler) RefreshHandler(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("access_token", access, int(h.cfg.AuthAccessTokenExpiration), "/", h.cfg.AppDomain, true, true)
-	c.SetCookie("refresh_token", refresh, int(h.cfg.AuthRefreshTokenExpiration), "/", h.cfg.AppDomain, true, true)
+	c.SetCookie("access_token", access, int(h.cfg.AuthAccessTokenExpiration.Seconds()), "/", h.cfg.AppDomain, true, true)
+	c.SetCookie("refresh_token", refresh, int(h.cfg.AuthRefreshTokenExpiration.Seconds()), "/", h.cfg.AppDomain, true, true)
 	utils.SuccessResponse(c, gin.H{
 		"access_token":  access,
 		"refresh_token": refresh,
@@ -235,7 +235,7 @@ func (h *authHandler) GoogleCallbackHandler(c *gin.Context) {
 		utils.ErrorResponse(c, err)
 		return
 	}
-	c.SetCookie("access_token", access, int(h.cfg.AuthAccessTokenExpiration), "/", h.cfg.AppDomain, true, true)
-	c.SetCookie("refresh_token", refresh, int(h.cfg.AuthRefreshTokenExpiration), "/", h.cfg.AppDomain, true, true)
+	c.SetCookie("access_token", access, int(h.cfg.AuthAccessTokenExpiration.Seconds()), "/", h.cfg.AppDomain, true, true)
+	c.SetCookie("refresh_token", refresh, int(h.cfg.AuthRefreshTokenExpiration.Seconds()), "/", h.cfg.AppDomain, true, true)
 	c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s://%s/uptime", h.cfg.AppScheme, h.cfg.AppDomain))
 }
