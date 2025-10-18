@@ -408,5 +408,10 @@ func (s *authService) GoogleCallback(ctx context.Context, code string) (string, 
 		return "", "", utils.InternalServerError("Failed to generate token", err)
 	}
 
+	if err := s.redis.Set(ctx, utils.GetRefreshTokenKey(refresh), user.ID, s.jwtUtil.RefreshTTL).Err(); err != nil {
+		utils.Error(ctx, "Failed to store refresh token", map[string]any{"err": err.Error()})
+		return "", "", utils.InternalServerError("Failed to store refresh token", err)
+	}
+
 	return access, refresh, nil
 }
