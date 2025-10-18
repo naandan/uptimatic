@@ -3,18 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { urlService } from "@/lib/services/url";
+import { URLStats } from "@/types/url";
 import { formatDateGMT7, formatDateTimeGMT7, formatTimeGMT7 } from "@/utils/format";
 import { ChevronLeft, ChevronRight, InfoIcon, Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-
-type Bucket = {
-  bucket_start: string;
-  total_checks: number;
-  up_checks: number;
-  uptime_percent: number;
-};
 
 const getBarColor = (uptime: number) => {
   if (uptime >= 90) return "#22c55e";
@@ -29,7 +23,7 @@ export default function UptimeStats() {
   const router = useRouter();
   const [mode, setMode] = useState<"day" | "month">("day");
   const [offset, setOffset] = useState(0);
-  const [data, setData] = useState<Bucket[]>([]);
+  const [data, setData] = useState<URLStats[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
@@ -71,7 +65,10 @@ export default function UptimeStats() {
             </Button>
           </div>
 
-          <Select value={mode} onValueChange={(v: any) => setMode(v)}>
+          <Select value={mode} onValueChange={(v: "day" | "month") => {
+            setMode(v)
+            setOffset(0)
+          }}>
             <SelectTrigger>
               <SelectValue placeholder="Mode" />
             </SelectTrigger>
