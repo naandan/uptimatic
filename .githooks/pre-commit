@@ -4,6 +4,7 @@ set -e
 cd server/app
 echo "Formatting Go files..."
 goimports -w .
+git add .
 echo "Running Go lint..."
 golangci-lint run
 cd ../../
@@ -11,6 +12,7 @@ cd ../../
 cd client/web
 echo "Formatting JS/TS files..."
 pnpm format
+git add .
 echo "Running JS/TS lint..."
 pnpm lint
 cd ../../
