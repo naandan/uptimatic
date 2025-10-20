@@ -7,7 +7,6 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-// MiddlewareHandler membungkus handler agar otomatis inject trace_id.
 func MiddlewareHandler(handler func(context.Context, *asynq.Task) error) asynq.HandlerFunc {
 	return func(ctx context.Context, t *asynq.Task) error {
 		ctx = utils.WithTraceID(ctx)

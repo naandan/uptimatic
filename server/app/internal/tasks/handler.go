@@ -30,10 +30,6 @@ func NewTaskHandler(cfg *config.Config, pgsql *gorm.DB, client *asynq.Client, ma
 	return &TaskHandler{cfg, pgsql, client, mailTask, urlRepo, logRepo}
 }
 
-// ====================================================================
-// 📧 Send Email Task
-// ====================================================================
-
 func (h *TaskHandler) SendEmailHandler(ctx context.Context, t *asynq.Task) error {
 	var payload email.EmailPayload
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
@@ -61,10 +57,6 @@ func (h *TaskHandler) SendEmailHandler(ctx context.Context, t *asynq.Task) error
 	})
 	return nil
 }
-
-// ====================================================================
-// 🌐 Check Uptime Task
-// ====================================================================
 
 func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) error {
 	var payload models.URL
@@ -118,7 +110,6 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		"response_time": log.ResponseTime,
 	})
 
-	// Jika status error (>=400), kirim email notifikasi
 	if resp.StatusCode >= 400 {
 		utils.Warn(ctx, "URL is down, sending notification", map[string]any{
 			"url":    payload.URL,
@@ -152,7 +143,6 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		}
 	}
 
-	// Update waktu terakhir diperiksa
 	payload.LastChecked = &log.CheckedAt
 	if err := h.urlRepo.Update(ctx, h.pgsql, &payload); err != nil {
 		utils.Error(ctx, "Failed to update URL last checked", map[string]any{
@@ -168,10 +158,6 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 	})
 	return nil
 }
-
-// ====================================================================
-// ⏱ Validate Uptime Task
-// ====================================================================
 
 func (h *TaskHandler) ValidateUptimeHandler(ctx context.Context, t *asynq.Task) error {
 	utils.Info(ctx, "Running uptime validation task", nil)

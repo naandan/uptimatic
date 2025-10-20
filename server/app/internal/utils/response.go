@@ -10,6 +10,37 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
+const (
+	ValidationError = "VALIDATION_ERROR"
+
+	Unauthorized       = "UNAUTHORIZED"
+	InvalidCredentials = "INVALID_CREDENTIALS"
+	InvalidToken       = "INVALID_TOKEN"
+	ForbiddenAction    = "FORBIDDEN_ACTION"
+	AccountLocked      = "ACCOUNT_LOCKED"
+	TooManyRequests    = "TOO_MANY_REQUESTS"
+
+	NotFound = "NOT_FOUND"
+	Conflict = "CONFLICT"
+
+	InternalError      = "INTERNAL_ERROR"
+	ServiceUnavailable = "SERVICE_UNAVAILABLE"
+	Timeout            = "TIMEOUT"
+)
+
+const (
+	Required      = "REQUIRED"
+	InvalidType   = "INVALID_TYPE"
+	InvalidFormat = "INVALID_FORMAT"
+	MinLength     = "MIN_LENGTH"
+	MaxLength     = "MAX_LENGTH"
+	EnumValue     = "ENUM_VALUE"
+	Mismatch      = "MISMATCH"
+	Unique        = "UNIQUE"
+	MinValue      = "MIN_VALUE"
+	MaxValue      = "MAX_VALUE"
+)
+
 func SuccessResponse(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, gin.H{
 		"request_id": getRequestID(c.Request.Context()),

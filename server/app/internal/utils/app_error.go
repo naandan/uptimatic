@@ -17,7 +17,6 @@ func (e *AppError) Error() string {
 	return e.Message
 }
 
-// 🔹 Helper untuk buat AppError biasa
 func NewAppError(status int, code, message string, err error) *AppError {
 	return &AppError{
 		Status:  status,
@@ -27,7 +26,6 @@ func NewAppError(status int, code, message string, err error) *AppError {
 	}
 }
 
-// 🔹 Helper untuk validasi error (422)
 func ValidationErrorErr(fields map[string][]map[string]any) *AppError {
 	return &AppError{
 		Code:    ValidationError,
@@ -37,14 +35,12 @@ func ValidationErrorErr(fields map[string][]map[string]any) *AppError {
 	}
 }
 
-// 🔹 Helper spesifik untuk Unique constraint
 func UniqueFieldError(field string) *AppError {
 	return ValidationErrorErr(map[string][]map[string]any{
 		field: {{"code": Unique}},
 	})
 }
 
-// 🔹 Helper untuk error umum
 func InternalServerError(message string, err error) *AppError {
 	return NewAppError(http.StatusInternalServerError, InternalError, message, err)
 }
