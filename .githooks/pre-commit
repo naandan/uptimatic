@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cd server/app
+echo "Checking Go formatting..."
+goimports -l .
+echo "Running Go lint..."
+golangci-lint run
+cd ../../
+
+cd client/web
+echo "Running JS/TS lint..."
+pnpm lint
+echo "Checking JS/TS format..."
+pnpm format --check
+cd ../../
