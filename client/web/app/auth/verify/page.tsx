@@ -5,21 +5,20 @@ import { Mail } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/lib/services/auth";
 
-function VerifyEmailForm(){
-
+function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
-  
+
   const [message, setMessage] = useState("Memverifikasi email kamu...");
   const [isError, setIsError] = useState(false);
-  
+
   useEffect(() => {
     if (!token) {
       router.replace("/auth/login");
       return;
     }
-  
+
     const verify = async () => {
       const res = await authService.verify(token);
       if (!res.success) {
@@ -29,16 +28,16 @@ function VerifyEmailForm(){
         return;
       } else {
         const res = await authService.profile();
-        if (res.success){
+        if (res.success) {
           await authService.refresh();
         }
         router.replace("/auth/verify-success");
       }
     };
-  
+
     verify();
   }, [token, router]);
-  
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-sm max-w-md w-full text-center border border-slate-200">

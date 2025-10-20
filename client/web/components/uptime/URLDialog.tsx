@@ -20,7 +20,7 @@ interface AddEditDialogProps {
   mode: "add" | "edit";
   open: boolean;
   initialData: Partial<URLResponse>;
-  onInputChange: Dispatch<SetStateAction<Partial<URLResponse>>>
+  onInputChange: Dispatch<SetStateAction<Partial<URLResponse>>>;
   onSave: () => void;
   errors: ErrorInput[];
   onClose: () => void;
@@ -51,9 +51,11 @@ export function AddEditDialog({
               id="label"
               placeholder="Contoh: Homepage"
               value={initialData.label}
-              onChange={(e) => onInputChange({ ...initialData, label: e.target.value })}
+              onChange={(e) =>
+                onInputChange({ ...initialData, label: e.target.value })
+              }
             />
-            <ErrorInputMessage errors={errors} field="label" /> 
+            <ErrorInputMessage errors={errors} field="label" />
           </div>
 
           <div className="space-y-2">
@@ -63,7 +65,9 @@ export function AddEditDialog({
               type="url"
               placeholder="https://www.example.com"
               value={initialData.url}
-              onChange={(e) => onInputChange({ ...initialData, url: e.target.value })}
+              onChange={(e) =>
+                onInputChange({ ...initialData, url: e.target.value })
+              }
             />
             <ErrorInputMessage errors={errors} field="url" />
           </div>
@@ -86,7 +90,7 @@ export function AddEditDialog({
             <Switch
               checked={initialData.active}
               onCheckedChange={(checked) =>
-                onInputChange({ ...initialData, active: checked?? false })
+                onInputChange({ ...initialData, active: checked ?? false })
               }
             />
           </div>

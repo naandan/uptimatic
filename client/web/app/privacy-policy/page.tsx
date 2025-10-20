@@ -1,4 +1,4 @@
-export default function PrivacyPolicy () {
+export default function PrivacyPolicy() {
   return (
     <div className="py-20 bg-white">
       <div className="max-w-4xl mx-auto px-6 text-slate-700">
@@ -16,8 +16,9 @@ export default function PrivacyPolicy () {
             </h2>
             <p>
               Uptimatic menghargai privasi Anda. Kebijakan privasi ini
-              menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi
-              data pribadi Anda saat menggunakan layanan pemantauan uptime kami.
+              menjelaskan bagaimana kami mengumpulkan, menggunakan, dan
+              melindungi data pribadi Anda saat menggunakan layanan pemantauan
+              uptime kami.
             </p>
           </section>
 
@@ -25,9 +26,7 @@ export default function PrivacyPolicy () {
             <h2 className="text-xl font-semibold text-slate-800 mb-2">
               2. Data yang Kami Kumpulkan
             </h2>
-            <p>
-              Kami dapat mengumpulkan data berikut:
-            </p>
+            <p>Kami dapat mengumpulkan data berikut:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Alamat email untuk tujuan notifikasi dan autentikasi.</li>
               <li>Data situs atau endpoint API yang Anda pantau.</li>
@@ -39,13 +38,16 @@ export default function PrivacyPolicy () {
             <h2 className="text-xl font-semibold text-slate-800 mb-2">
               3. Cara Kami Menggunakan Data
             </h2>
-            <p>
-              Data yang dikumpulkan digunakan untuk:
-            </p>
+            <p>Data yang dikumpulkan digunakan untuk:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Memberikan laporan performa dan uptime secara real-time.</li>
-              <li>Mengirim notifikasi downtime melalui email atau integrasi pihak ketiga.</li>
-              <li>Meningkatkan kualitas layanan Uptimatic melalui analisis teknis.</li>
+              <li>
+                Mengirim notifikasi downtime melalui email atau integrasi pihak
+                ketiga.
+              </li>
+              <li>
+                Meningkatkan kualitas layanan Uptimatic melalui analisis teknis.
+              </li>
             </ul>
           </section>
 
@@ -54,9 +56,10 @@ export default function PrivacyPolicy () {
               4. Penyimpanan dan Keamanan Data
             </h2>
             <p>
-              Kami menggunakan infrastruktur global yang aman dengan enkripsi data
-              dan sistem backup berkala untuk memastikan integritas informasi Anda.
-              Data Anda tidak akan dijual atau dibagikan kepada pihak ketiga tanpa izin.
+              Kami menggunakan infrastruktur global yang aman dengan enkripsi
+              data dan sistem backup berkala untuk memastikan integritas
+              informasi Anda. Data Anda tidak akan dijual atau dibagikan kepada
+              pihak ketiga tanpa izin.
             </p>
           </section>
 
@@ -65,9 +68,10 @@ export default function PrivacyPolicy () {
               5. Integrasi Pihak Ketiga
             </h2>
             <p>
-              Uptimatic dapat terhubung dengan layanan pihak ketiga seperti Slack
-              atau sistem notifikasi lain. Kami hanya membagikan data yang diperlukan
-              untuk fungsi tersebut, dan pengguna memiliki kendali penuh atas integrasinya.
+              Uptimatic dapat terhubung dengan layanan pihak ketiga seperti
+              Slack atau sistem notifikasi lain. Kami hanya membagikan data yang
+              diperlukan untuk fungsi tersebut, dan pengguna memiliki kendali
+              penuh atas integrasinya.
             </p>
           </section>
 
@@ -76,8 +80,9 @@ export default function PrivacyPolicy () {
               6. Hak Pengguna
             </h2>
             <p>
-              Anda berhak untuk mengakses, memperbarui, atau menghapus data pribadi
-              Anda kapan saja melalui dasbor Uptimatic atau dengan menghubungi tim kami.
+              Anda berhak untuk mengakses, memperbarui, atau menghapus data
+              pribadi Anda kapan saja melalui dasbor Uptimatic atau dengan
+              menghubungi tim kami.
             </p>
           </section>
 
@@ -87,8 +92,8 @@ export default function PrivacyPolicy () {
             </h2>
             <p>
               Kami dapat memperbarui kebijakan privasi ini dari waktu ke waktu.
-              Pembaruan akan diumumkan melalui situs resmi Uptimatic dan mulai berlaku
-              segera setelah dipublikasikan.
+              Pembaruan akan diumumkan melalui situs resmi Uptimatic dan mulai
+              berlaku segera setelah dipublikasikan.
             </p>
           </section>
 
@@ -112,4 +117,4 @@ export default function PrivacyPolicy () {
       </div>
     </div>
   );
-};
+}

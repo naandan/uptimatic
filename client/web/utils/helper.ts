@@ -13,7 +13,6 @@ const VALIDATION: Record<string, string | ((param?: string) => string)> = {
   MAX_VALUE: (max?: string) => `Maksimal ${max}.`,
 };
 
-
 const MESSAGES: Record<string, string> = {
   VALIDATION_ERROR: "Input tidak valid.",
 
@@ -31,7 +30,6 @@ const MESSAGES: Record<string, string> = {
   SERVICE_UNAVAILABLE: "Layanan tidak tersedia.",
   TIMEOUT: "Koneksi terputus.",
 };
-
 
 export function getValidationErrors(fields?: ApiError["fields"]) {
   if (!fields) return [];

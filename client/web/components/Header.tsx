@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import HeaderProfile from "./HeaderProfile";
 
 export const Header = () => {
-  const {isLoggedIn} = useAuth();
+  const { isLoggedIn } = useAuth();
   return (
     <header className="flex justify-between items-center py-4 px-6 md:px-12 bg-white/70 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
       <Link href="/" className="text-2xl font-semibold text-primary">
@@ -18,9 +18,9 @@ export const Header = () => {
         <Link href="#about" className="hover:text-primary">Tentang</Link>
       </nav> */}
       <div className="space-x-2">
-        {isLoggedIn ?(
+        {isLoggedIn ? (
           <HeaderProfile />
-        ):(
+        ) : (
           <>
             <Button variant="ghost" asChild>
               <Link href="/auth/login">Masuk</Link>
@@ -33,4 +33,4 @@ export const Header = () => {
       </div>
     </header>
   );
-}
+};

@@ -73,8 +73,8 @@ export default function VerifyEmailPage() {
           Verifikasi Email Kamu
         </h1>
         <p className="text-slate-600 mb-4">
-          Klik tombol di bawah ini untuk mengirim email verifikasi.  
-          Setelah terkirim, kamu bisa mengirim ulang setelah 60 detik.
+          Klik tombol di bawah ini untuk mengirim email verifikasi. Setelah
+          terkirim, kamu bisa mengirim ulang setelah 60 detik.
         </p>
 
         <Button
@@ -85,10 +85,10 @@ export default function VerifyEmailPage() {
           {loading
             ? "Mengirim..."
             : countdown > 0
-            ? `Kirim ulang dalam ${countdown}s`
-            : hasStarted
-            ? "Kirim Ulang Email"
-            : "Kirim Email Verifikasi"}
+              ? `Kirim ulang dalam ${countdown}s`
+              : hasStarted
+                ? "Kirim Ulang Email"
+                : "Kirim Email Verifikasi"}
         </Button>
 
         <Button onClick={handleRefresh} className="w-full">

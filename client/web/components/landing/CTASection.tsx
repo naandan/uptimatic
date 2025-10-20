@@ -11,7 +11,8 @@ export const CTASection = () => {
           Siap menjaga uptime Anda?
         </h2>
         <p className="text-white/90 mb-8">
-          Mulai gratis sekarang dan nikmati pemantauan uptime otomatis selama 14 hari.
+          Mulai gratis sekarang dan nikmati pemantauan uptime otomatis selama 14
+          hari.
         </p>
         <Button asChild size="lg" variant="secondary" className="font-semibold">
           <Link href="/auth/register">Mulai Sekarang</Link>
@@ -19,4 +20,4 @@ export const CTASection = () => {
       </div>
     </section>
   );
-}
+};
