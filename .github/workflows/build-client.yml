@@ -47,9 +47,12 @@ jobs:
 
       - name: Get branch and repo info
         run: |
-          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-          echo "REPO_NAME=$(echo \"${GITHUB_REPOSITORY#*/}\" | awk '{print tolower($0)}')" >> $GITHUB_ENV
-          echo "CLIENT_IMAGE_TAG=ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}-client:${{ env.BRANCH_NAME }}" >> $GITHUB_ENV
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          REPO_NAME=$(echo "${GITHUB_REPOSITORY#*/}" | awk '{print tolower($0)}')
+          CLIENT_IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/${REPO_NAME}-client:${BRANCH_NAME}"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+          echo "CLIENT_IMAGE_TAG=$CLIENT_IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: docker build -t ${{ env.CLIENT_IMAGE_TAG }} ./client
