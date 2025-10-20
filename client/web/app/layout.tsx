@@ -14,14 +14,23 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Uptimatic - Monitor Website & Server",
-  description: "Uptimatic membantu kamu memonitor uptime website dan server secara realtime.",
-  keywords: ["uptime", "monitoring", "website", "server", "alerts", "uptimatic"],
+  description:
+    "Uptimatic membantu kamu memonitor uptime website dan server secara realtime.",
+  keywords: [
+    "uptime",
+    "monitoring",
+    "website",
+    "server",
+    "alerts",
+    "uptimatic",
+  ],
   authors: [{ name: "Uptimatic Team", url: "https://uptimatic.aeria.my.id" }],
   creator: "Uptimatic Team",
   publisher: "Uptimatic",
   openGraph: {
     title: "Uptimatic - Monitor Website & Server",
-    description: "Uptimatic membantu kamu memonitor uptime website dan server secara realtime.",
+    description:
+      "Uptimatic membantu kamu memonitor uptime website dan server secara realtime.",
     url: "https://uptimatic.aeria.my.id",
     siteName: "Uptimatic",
     images: [
@@ -38,7 +47,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Uptimatic - Monitor Website & Server",
-    description: "Uptimatic membantu kamu memonitor uptime website dan server secara realtime.",
+    description:
+      "Uptimatic membantu kamu memonitor uptime website dan server secara realtime.",
     images: ["https://uptimatic.aeria.my.id/og-image.png"],
     creator: "@uptimatic",
   },
@@ -52,13 +62,14 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Uptimatic",
-    "url": "https://uptimatic.aeria.my.id",
-    "author": {
+    name: "Uptimatic",
+    url: "https://uptimatic.aeria.my.id",
+    author: {
       "@type": "Organization",
-      "name": "Uptimatic Team",
+      name: "Uptimatic Team",
     },
-    "description": "Uptimatic membantu kamu memonitor uptime website dan server secara realtime.",
+    description:
+      "Uptimatic membantu kamu memonitor uptime website dan server secara realtime.",
   };
 
   return (

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,8 @@ export default function ResetSuccessPage() {
           Reset Password Berhasil
         </h1>
         <p className="text-slate-600 mb-4">
-          Password kamu sudah berhasil diubah. Silakan login menggunakan password baru.
+          Password kamu sudah berhasil diubah. Silakan login menggunakan
+          password baru.
         </p>
 
         <Button onClick={handleLogin} className="w-full">

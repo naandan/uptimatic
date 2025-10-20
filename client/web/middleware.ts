@@ -26,7 +26,9 @@ export function middleware(req: NextRequest) {
   let verified = false;
   try {
     const payloadBase64 = token.split(".")[1];
-    const decodedPayload = JSON.parse(Buffer.from(payloadBase64, "base64").toString());
+    const decodedPayload = JSON.parse(
+      Buffer.from(payloadBase64, "base64").toString(),
+    );
     verified = decodedPayload.verified === true;
   } catch {
     verified = false;

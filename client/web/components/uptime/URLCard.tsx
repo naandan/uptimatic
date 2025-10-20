@@ -14,7 +14,12 @@ interface URLCardProps {
   onDelete: () => void;
 }
 
-export default function URLCard({ data, onToggle, onEdit, onDelete }: URLCardProps) {
+export default function URLCard({
+  data,
+  onToggle,
+  onEdit,
+  onDelete,
+}: URLCardProps) {
   const router = useRouter();
 
   const handleCardClick = () => {
@@ -36,14 +41,18 @@ export default function URLCard({ data, onToggle, onEdit, onDelete }: URLCardPro
           </div>
           <Badge
             variant={data.active ? "default" : "secondary"}
-            className={data.active ? "bg-green-500 hover:bg-green-600" : "bg-gray-400"}
+            className={
+              data.active ? "bg-green-500 hover:bg-green-600" : "bg-gray-400"
+            }
           >
             {data.active ? "Aktif" : "Nonaktif"}
           </Badge>
         </div>
 
         <p className="text-sm text-primary truncate mb-2">{data.url}</p>
-        <p className="text-xs text-slate-500">Interval: {data.interval / 60} menit</p>
+        <p className="text-xs text-slate-500">
+          Interval: {data.interval / 60} menit
+        </p>
         <p className="text-xs text-slate-500">
           Terakhir dicek: {formatTimeGMT7(data.last_checked)}
         </p>
@@ -51,10 +60,24 @@ export default function URLCard({ data, onToggle, onEdit, onDelete }: URLCardPro
 
       <div className="flex items-center justify-between mt-4">
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={(e) => { stopClick(e); onEdit(); }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              stopClick(e);
+              onEdit();
+            }}
+          >
             <Edit2 className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={(e) => { stopClick(e); onDelete(); }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              stopClick(e);
+              onDelete();
+            }}
+          >
             <Trash2 className="w-4 h-4 text-red-500" />
           </Button>
         </div>

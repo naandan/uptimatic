@@ -2,8 +2,14 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
 import { ApiResponse } from "@/types/response";
 
 let isRefreshing = false;
-let failedQueue: { resolve: (value?: any) => void; reject: (err: any) => void }[] = [];
+let failedQueue: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  resolve: (value?: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  reject: (err: any) => void;
+}[] = [];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const processQueue = (error: any | null) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
@@ -30,6 +36,7 @@ api.interceptors.response.use(
     return normalized as unknown as AxiosResponse<ApiResponse>;
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (error: AxiosError | any) => {
     const originalRequest = error.config;
     const res = error.response;
@@ -44,7 +51,10 @@ api.interceptors.response.use(
         })
           .then(() => api(originalRequest))
           .catch(() =>
-            Promise.resolve({ success: false, error: { message: "Unauthorized", code: res?.data.error.code } })
+            Promise.resolve({
+              success: false,
+              error: { message: "Unauthorized", code: res?.data.error.code },
+            }),
           );
       }
 
@@ -54,12 +64,16 @@ api.interceptors.response.use(
         await axios.post("/api/v1/auth/refresh", {}, { withCredentials: true });
         processQueue(null);
         return api(originalRequest);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (refreshErr: any) {
         processQueue(refreshErr);
         failedQueue = [];
         return Promise.resolve({
           success: false,
-          error: { message: "Unauthorized", code: refreshErr?.response.data.error.code },
+          error: {
+            message: "Unauthorized",
+            code: refreshErr?.response.data.error.code,
+          },
         });
       } finally {
         isRefreshing = false;
@@ -82,7 +96,7 @@ api.interceptors.response.use(
     };
 
     return Promise.resolve(normalizedError);
-  }
+  },
 );
 
 export default api;

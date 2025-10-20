@@ -1,14 +1,33 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { urlService } from "@/lib/services/url";
 import { URLStats } from "@/types/url";
-import { formatDateGMT7, formatDateTimeGMT7, formatTimeGMT7 } from "@/utils/format";
+import {
+  formatDateGMT7,
+  formatDateTimeGMT7,
+  formatTimeGMT7,
+} from "@/utils/format";
 import { ChevronLeft, ChevronRight, InfoIcon, Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useState, useEffect, useCallback } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
 const getBarColor = (uptime: number) => {
   if (uptime >= 90) return "#22c55e";
@@ -26,7 +45,7 @@ export default function UptimeStats() {
   const [data, setData] = useState<URLStats[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const res = await urlService.stats(idNumber, mode, offset);
     if (res.success) {
@@ -36,11 +55,11 @@ export default function UptimeStats() {
       setData([]);
     }
     setLoading(false);
-  };
+  }, [idNumber, mode, offset]);
 
   useEffect(() => {
     fetchData();
-  }, [id, mode, offset]);
+  }, [fetchData]);
 
   const handlePrev = () => setOffset(offset + 1);
   const handleNext = () => setOffset(Math.max(0, offset - 1));
@@ -49,11 +68,13 @@ export default function UptimeStats() {
     <div className="mt-12 max-w-5xl mx-auto min-h-screen px-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-2">
-          <Button onClick={() => router.push('/uptime')} variant="ghost">
+          <Button onClick={() => router.push("/uptime")} variant="ghost">
             <ChevronLeft className="w-4 h-4 mr-2" />
             {/* Kembali */}
           </Button>
-          <h2 className="text-2xl font-semibold text-slate-800">Statistik Uptime</h2>
+          <h2 className="text-2xl font-semibold text-slate-800">
+            Statistik Uptime
+          </h2>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex gap-2">
@@ -65,10 +86,13 @@ export default function UptimeStats() {
             </Button>
           </div>
 
-          <Select value={mode} onValueChange={(v: "day" | "month") => {
-            setMode(v)
-            setOffset(0)
-          }}>
+          <Select
+            value={mode}
+            onValueChange={(v: "day" | "month") => {
+              setMode(v);
+              setOffset(0);
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Mode" />
             </SelectTrigger>
@@ -92,7 +116,10 @@ export default function UptimeStats() {
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+          <BarChart
+            data={data}
+            margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="bucket_start"
@@ -102,12 +129,17 @@ export default function UptimeStats() {
             />
             <YAxis domain={[0, 100]} unit="%" />
             <Tooltip
-              formatter={(value: any) => [`${value}%`, "Uptime"]}
-              labelFormatter={(label: string) => `Waktu: ${mode === "day" ? formatDateTimeGMT7(label) : formatDateGMT7(label)}`}
+              formatter={(value: number) => [`${value}%`, "Uptime"]}
+              labelFormatter={(label: string) =>
+                `Waktu: ${mode === "day" ? formatDateTimeGMT7(label) : formatDateGMT7(label)}`
+              }
             />
             <Bar dataKey="uptime_percent" radius={[4, 4, 0, 0]}>
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getBarColor(entry.uptime_percent)} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={getBarColor(entry.uptime_percent)}
+                />
               ))}
             </Bar>
           </BarChart>

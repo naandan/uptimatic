@@ -91,7 +91,11 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		})
 		return fmt.Errorf("failed to check URL %s: %w", payload.URL, err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			utils.Error(ctx, "Failed to close response body", map[string]any{"error": err.Error()})
+		}
+	}()
 
 	log := models.StatusLog{
 		URLID:        payload.ID,

@@ -2,7 +2,17 @@ import { useEffect, useState } from "react";
 import type { URLResponse } from "@/types/url";
 import { urlService } from "@/lib/services/url";
 
-export function useURLs({ query, filter, sortBy, page }: any) {
+export function useURLs({
+  query,
+  filter,
+  sortBy,
+  page,
+}: {
+  query?: string;
+  filter?: "all" | "active" | "inactive";
+  sortBy?: "label" | "created_at";
+  page?: number;
+}) {
   const [urls, setUrls] = useState<URLResponse[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -19,8 +29,7 @@ export function useURLs({ query, filter, sortBy, page }: any) {
       setUrls(res.data || []);
       setTotalPages(res.meta?.total_page || 1);
       setLoading(false);
-    })
-
+    });
   }, [query, filter, sortBy, page]);
 
   return { urls, totalPages, loading, setUrls };

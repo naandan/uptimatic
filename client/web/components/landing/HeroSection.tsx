@@ -14,11 +14,11 @@ export const HeroSection = () => {
         className="max-w-3xl mx-auto px-4"
       >
         <h1 className="text-5xl font-bold leading-tight tracking-tight text-slate-800">
-          Pantau Ketersediaan Website Anda.  
+          Pantau Ketersediaan Website Anda.
           <span className="text-primary"> Secara Real-Time.</span>
         </h1>
         <p className="mt-6 text-lg text-slate-600">
-          Uptimatic membantu Anda memonitor uptime dan performa situs atau API,  
+          Uptimatic membantu Anda memonitor uptime dan performa situs atau API,
           agar Anda selalu tahu sebelum pengguna Anda tahu.
         </p>
         <div className="mt-8 flex justify-center gap-4">
@@ -32,4 +32,4 @@ export const HeroSection = () => {
       </motion.div>
     </section>
   );
-}
+};

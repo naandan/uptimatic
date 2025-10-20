@@ -1,6 +1,6 @@
-export interface ErrorInput { 
-  field: string; 
-  reasons: string[]
+export interface ErrorInput {
+  field: string;
+  reasons: string[];
 }
 
 export interface ValidationFieldError {

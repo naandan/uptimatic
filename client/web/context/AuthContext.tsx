@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { authService } from "@/lib/services/auth";
 import { createContext, useContext, useState, useEffect } from "react";
 
@@ -31,7 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setLoggedIn: setIsLoggedIn, isLoading }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn, setLoggedIn: setIsLoggedIn, isLoading }}
+    >
       {children}
     </AuthContext.Provider>
   );

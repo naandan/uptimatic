@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,20 +11,16 @@ import { getErrorMessage } from "@/utils/helper";
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setSuccess(false);
-    
+
     const res = await authService.forgotPassword(email);
     if (!res.success) {
       toast.error(getErrorMessage(res.error?.code || ""));
-      setSuccess(false);
     } else {
       toast.success("Link reset password telah dikirim ke email kamu.");
-      setSuccess(true);
     }
     setLoading(false);
   };
@@ -37,7 +33,8 @@ export default function ForgotPasswordPage() {
           Lupa Password
         </h1>
         <p className="text-slate-600 mb-4">
-          Masukkan email kamu di bawah ini, kami akan mengirim link untuk mereset password.
+          Masukkan email kamu di bawah ini, kami akan mengirim link untuk
+          mereset password.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

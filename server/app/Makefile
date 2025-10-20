@@ -32,3 +32,9 @@ worker:
 # Start Scheduler
 scheduler:
 	go run main.go scheduler
+
+format:
+	goimports -w .
+
+lint:
+	golangci-lint run

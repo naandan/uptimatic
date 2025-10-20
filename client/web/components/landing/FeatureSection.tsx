@@ -50,4 +50,4 @@ export const FeaturesSection = () => {
       </div>
     </section>
   );
-}
+};

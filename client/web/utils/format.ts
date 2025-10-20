@@ -16,7 +16,6 @@ export const formatTimeGMT7 = (dateStr: string) => {
   });
 };
 
-
 export const formatDateTimeGMT7 = (dateStr: string) => {
   return `${formatDateGMT7(dateStr)} ${formatTimeGMT7(dateStr)}`;
 };

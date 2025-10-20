@@ -33,5 +33,7 @@ func Start() {
 	}
 
 	utils.Debug(ctx, "Scheduler started", nil)
-	scheduler.Run()
+	if err := scheduler.Run(); err != nil {
+		utils.Fatal(ctx, "failed to run scheduler", map[string]any{"error": err})
+	}
 }

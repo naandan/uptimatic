@@ -52,11 +52,11 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         }
       }
       setLoading(false);
-    }else{
+    } else {
       const res = await authService.login(payload);
       if (!res.success) {
         toast.error(getErrorMessage(res.error?.code || ""));
-      }else{
+      } else {
         toast.success("Login berhasil");
         setLoggedIn(true);
         router.push("/uptime");
@@ -118,28 +118,23 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                 />
                 <ErrorInputMessage errors={errors} field="password" />
                 <div className="flex items-center justify-end">
-                {type === "login" && (
-                        <Link
-                        href="/auth/forgot-password"
-                        className="text-xs text-primary hover:underline"
-                        >
-                        Lupa kata sandi?
-                        </Link>
-                    )}
+                  {type === "login" && (
+                    <Link
+                      href="/auth/forgot-password"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Lupa kata sandi?
+                    </Link>
+                  )}
                 </div>
               </div>
 
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading
                   ? "Memproses..."
                   : type === "login"
-                  ? "Masuk"
-                  : "Daftar"}
+                    ? "Masuk"
+                    : "Daftar"}
               </Button>
 
               <div className="relative">
@@ -154,7 +149,14 @@ export const AuthForm = ({ type }: AuthFormProps) => {
               </div>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => window.location.replace("/api/v1/auth/google/login")} type="button" className="w-full">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    window.location.replace("/api/v1/auth/google/login")
+                  }
+                  type="button"
+                  className="w-full"
+                >
                   <FcGoogle size={24} />
                   Google
                 </Button>
@@ -193,4 +195,4 @@ export const AuthForm = ({ type }: AuthFormProps) => {
       </motion.div>
     </div>
   );
-}
+};
