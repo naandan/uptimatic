@@ -1,4 +1,4 @@
-name: Build and Push Client Docker Image
+name: Client CI
 
 on:
   push:
@@ -9,13 +9,34 @@ on:
       - '.github/workflows/build-client.yml'
 
 jobs:
-  build-and-push-client:
+  lint-and-format:
     runs-on: ubuntu-latest
-    name: Build and Push Client Image
-
+    name: Lint & Format Client
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm --prefix client/web install
+
+      - name: Lint
+        run: pnpm --prefix client/web lint
+
+      - name: Format check
+        run: pnpm --prefix client/web format --check
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    name: Build & Push Client Docker Image
+    needs: lint-and-format
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -24,14 +45,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Get current branch name
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-
-      - name: Get repository name
-        run: echo "REPO_NAME=$(echo \"${GITHUB_REPOSITORY#*/}\" | awk '{print tolower($0)}')" >> $GITHUB_ENV
-
-      - name: Set image tag
-        run: echo "CLIENT_IMAGE_TAG=ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}-client:${{ env.BRANCH_NAME }}" >> $GITHUB_ENV
+      - name: Get branch and repo info
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "REPO_NAME=$(echo \"${GITHUB_REPOSITORY#*/}\" | awk '{print tolower($0)}')" >> $GITHUB_ENV
+          echo "CLIENT_IMAGE_TAG=ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}-client:${{ env.BRANCH_NAME }}" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: docker build -t ${{ env.CLIENT_IMAGE_TAG }} ./client

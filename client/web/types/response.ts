@@ -26,6 +26,7 @@ export interface ApiMeta {
   total_page: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ApiResponse<T = any> {
   success: boolean;
   requestId: string | null;
