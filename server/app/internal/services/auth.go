@@ -74,11 +74,14 @@ func (s *authService) Register(ctx context.Context, userEmail, password, appUrl 
 
 	link := fmt.Sprintf("%s/auth/verify?token=%s", appUrl, token)
 	iconUrl := fmt.Sprintf("%s/icon.png", appUrl)
-	tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{
+	if err := tasks.EnqueueEmail(s.asyncClient, userEmail, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{
 		"LogoURL":          iconUrl,
 		"Name":             userEmail,
 		"VerificationLink": link,
-	})
+	}); err != nil {
+		utils.Error(ctx, "Error sending verification email", map[string]any{"user_id": user.ID, "email": userEmail, "err": err.Error()})
+		return nil, utils.InternalServerError("Error sending verification email", err)
+	}
 
 	if err := s.redis.Set(ctx, utils.GetEmailVerificationTokenKey(userEmail), user.ID, 60*time.Second).Err(); err != nil {
 		utils.Error(ctx, "Error saving verification token in Redis", map[string]any{"user_id": user.ID, "err": err.Error()})
@@ -239,10 +242,10 @@ func (s *authService) ResendVerificationEmail(ctx context.Context, userID uint, 
 		return 0, utils.ConflictError("Email already verified", err)
 	}
 
-	expSec, err := s.redis.TTL(ctx, utils.GetEmailVerificationTokenKey(user.Email)).Result()
-	if err == nil && expSec > 0 {
-		utils.Info(ctx, "Resend verification email throttled", map[string]any{"user_id": userID, "ttl": expSec.Seconds()})
-		return int(expSec.Seconds()), nil
+	ttl, err := s.redis.TTL(ctx, utils.GetEmailVerificationTokenKey(user.Email)).Result()
+	if err == nil && ttl > 0 {
+		utils.Info(ctx, "Resend verification email throttled", map[string]any{"user_id": userID, "ttl": ttl.Seconds()})
+		return int(ttl.Seconds()), nil
 	}
 
 	token, err := s.jwtUtil.GenerateEmailVerificationToken(user.ID)
@@ -253,11 +256,14 @@ func (s *authService) ResendVerificationEmail(ctx context.Context, userID uint, 
 
 	link := fmt.Sprintf("%s/auth/verify?token=%s", appUrl, token)
 	iconUrl := fmt.Sprintf("%s/icon.png", appUrl)
-	tasks.EnqueueEmail(s.asyncClient, user.Email, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{
+	if err := tasks.EnqueueEmail(s.asyncClient, user.Email, "Verify your email - Uptimatic", email.EmailVerify, map[string]any{
 		"LogoURL":          iconUrl,
 		"Name":             user.Email,
 		"VerificationLink": link,
-	})
+	}); err != nil {
+		utils.Error(ctx, "Error sending verification email", map[string]any{"user_id": userID, "err": err.Error()})
+		return 0, utils.InternalServerError("Error sending verification email", err)
+	}
 
 	if err := s.redis.Set(ctx, utils.GetEmailVerificationTokenKey(user.Email), user.ID, 60*time.Second).Err(); err != nil {
 		utils.Error(ctx, "Error storing new verification token", map[string]any{"user_id": userID, "err": err.Error()})
@@ -317,11 +323,14 @@ func (s *authService) SendPasswordResetEmail(ctx context.Context, userEmail, app
 
 	link := fmt.Sprintf("%s/auth/reset-password?token=%s", appUrl, token)
 	iconUrl := fmt.Sprintf("%s/icon.png", appUrl)
-	tasks.EnqueueEmail(s.asyncClient, user.Email, "Reset your password - Uptimatic", email.EmailPasswordReset, map[string]any{
+	if err := tasks.EnqueueEmail(s.asyncClient, user.Email, "Reset your password - Uptimatic", email.EmailPasswordReset, map[string]any{
 		"LogoURL":   iconUrl,
 		"Name":      user.Email,
 		"ResetLink": link,
-	})
+	}); err != nil {
+		utils.Error(ctx, "Error sending password reset email", map[string]any{"user_id": user.ID, "err": err.Error()})
+		return utils.InternalServerError("Error sending password reset email", err)
+	}
 
 	utils.Info(ctx, "Password reset email queued", map[string]any{"user_id": user.ID, "email": user.Email})
 	return nil
@@ -379,7 +388,11 @@ func (s *authService) GoogleCallback(ctx context.Context, code string) (string, 
 		utils.Error(ctx, "Failed to get user info", map[string]any{"err": err.Error()})
 		return "", "", utils.InternalServerError("Failed to get user info", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			utils.Error(ctx, "Failed to close response body", map[string]any{"err": err})
+		}
+	}()
 
 	var oauthUser map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&oauthUser); err != nil {
