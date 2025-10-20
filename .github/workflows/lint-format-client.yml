@@ -1,0 +1,33 @@
+name: Client Lint & Format
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'client/**'
+      - '.github/workflows/lint-format-client.yml'
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+    name: Lint & Format Client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm --prefix client/web install
+
+      - name: Lint
+        run: pnpm --prefix client/web lint
+
+      - name: Format check
+        run: pnpm --prefix client/web format --check
