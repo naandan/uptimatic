@@ -2,7 +2,6 @@
 
 cd server/app
 echo "Checking Go formatting..."
-
 goimports -l .
 echo "Running Go lint..."
 golangci-lint run
