@@ -2,10 +2,11 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY web/package*.json ./
-RUN npm install
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install
 
-COPY web .
-RUN npm run build
+COPY web ./
+RUN pnpm run build
 
 FROM node:20-alpine AS production
 WORKDIR /app
@@ -29,9 +30,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
 RUN chown -R uptimatic:uptimatic /app
-
 USER uptimatic
 
 EXPOSE 3000
-
 CMD ["npm", "start"]
