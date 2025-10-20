@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 var Logger zerolog.Logger
@@ -31,8 +30,47 @@ func InitLogger(levelStr string) {
 	zerolog.SetGlobalLevel(level)
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
-	Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-	// Logger = log.Output(os.Stdout)
+	stdoutWriter := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+		w.Out = os.Stdout
+		w.TimeFormat = time.RFC3339Nano
+	})
+	stderrWriter := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+		w.Out = os.Stderr
+		w.TimeFormat = time.RFC3339Nano
+	})
+
+	Logger = zerolog.New(levelSplitter{
+		stdout: writerAdapter{stdoutWriter},
+		stderr: writerAdapter{stderrWriter},
+	}).With().Timestamp().Logger()
+}
+
+type writerAdapter struct {
+	w zerolog.ConsoleWriter
+}
+
+func (a writerAdapter) Write(p []byte) (n int, err error) {
+	return a.w.Write(p)
+}
+
+func (a writerAdapter) WriteLevel(level zerolog.Level, p []byte) (n int, err error) {
+	return a.w.Write(p)
+}
+
+type levelSplitter struct {
+	stdout zerolog.LevelWriter
+	stderr zerolog.LevelWriter
+}
+
+func (s levelSplitter) Write(p []byte) (n int, err error) {
+	return s.stdout.Write(p)
+}
+
+func (s levelSplitter) WriteLevel(level zerolog.Level, p []byte) (n int, err error) {
+	if level >= zerolog.ErrorLevel {
+		return s.stderr.WriteLevel(level, p)
+	}
+	return s.stdout.WriteLevel(level, p)
 }
 
 func commonFields(ctx context.Context, extra map[string]any) map[string]any {
