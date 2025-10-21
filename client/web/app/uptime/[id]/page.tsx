@@ -61,7 +61,7 @@ export default function UptimeStats() {
   const [loading, setLoading] = useState(false);
   const [url, setUrl] = useState<URLResponse>();
 
-  const fetchURL = async () => {
+  const fetchURL = useCallback(async () => {
     const res = await urlService.get(idNumber);
     if (!res.success) {
       toast.error("URL tidak ditemukan");
@@ -69,7 +69,7 @@ export default function UptimeStats() {
     }
     if (!res.data) return;
     setUrl(res.data);
-  };
+  }, [idNumber]);
 
   const fetchStats = useCallback(async () => {
     setLoading(true);
@@ -89,7 +89,7 @@ export default function UptimeStats() {
 
   useEffect(() => {
     fetchURL();
-  }, []);
+  }, [fetchURL]);
 
   const fetchAll = async () => {
     await fetchStats();
