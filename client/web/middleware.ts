@@ -7,9 +7,11 @@ export function middleware(req: NextRequest) {
   const token = cookies.get("refresh_token")?.value;
 
   const authRoutes = ["/auth/login", "/auth/register"];
-  const protectedRoutes = ["/uptime"];
+  const protectedRoutes = ["/uptime", "/user"];
   const verifyRoutes = ["/auth/verify", "/auth/verify-success"];
   const resendRoute = "/auth/resend-verification";
+
+  console.log(token);
 
   if (!token) {
     if (protectedRoutes.some((p) => pathname.startsWith(p))) {
@@ -29,6 +31,7 @@ export function middleware(req: NextRequest) {
     const decodedPayload = JSON.parse(
       Buffer.from(payloadBase64, "base64").toString(),
     );
+    console.log(decodedPayload);
     verified = decodedPayload.verified === true;
   } catch {
     verified = false;
@@ -52,6 +55,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/uptime/:path*",
+    "/user/:path*",
     "/auth/login",
     "/auth/register",
     "/auth/resend-verification",

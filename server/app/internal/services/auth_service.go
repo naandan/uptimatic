@@ -22,11 +22,10 @@ import (
 )
 
 type AuthService interface {
-	Register(ctx context.Context, email, password, appUrl string) (*models.User, *utils.AppError)
+	Register(ctx context.Context, name, email, password, appUrl string) (*models.User, *utils.AppError)
 	Login(ctx context.Context, email, password string) (string, string, *utils.AppError)
 	Logout(ctx context.Context, refreshToken string) *utils.AppError
 	Refresh(ctx context.Context, refreshToken string) (string, string, *utils.AppError)
-	Profile(ctx context.Context, userId uint) (*models.User, *utils.AppError)
 	VerifyEmail(ctx context.Context, token string) *utils.AppError
 	ResendVerificationEmail(ctx context.Context, userId uint, appUrl string) (int, *utils.AppError)
 	ResendVerificationEmailTTL(ctx context.Context, userId uint) (int, *utils.AppError)
@@ -49,7 +48,7 @@ func NewAuthService(db *gorm.DB, userRepo repositories.UserRepository, redis *re
 	return &authService{db, userRepo, redis, jwtUtil, asyncClient, google}
 }
 
-func (s *authService) Register(ctx context.Context, userEmail, password, appUrl string) (*models.User, *utils.AppError) {
+func (s *authService) Register(ctx context.Context, name, userEmail, password, appUrl string) (*models.User, *utils.AppError) {
 	utils.Info(ctx, "Register attempt", map[string]any{"email": userEmail})
 
 	_, err := s.userRepo.FindByEmail(ctx, s.db, userEmail)
@@ -59,7 +58,7 @@ func (s *authService) Register(ctx context.Context, userEmail, password, appUrl 
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user := &models.User{Email: userEmail, Password: string(hashed)}
+	user := &models.User{Name: name, Email: userEmail, Password: string(hashed)}
 
 	if err := s.userRepo.Create(ctx, s.db, user); err != nil {
 		utils.Error(ctx, "Error creating user", map[string]any{"email": userEmail, "err": err.Error()})
@@ -179,19 +178,6 @@ func (s *authService) Refresh(ctx context.Context, oldRefresh string) (string, s
 	return access, refresh, nil
 }
 
-func (s *authService) Profile(ctx context.Context, userId uint) (*models.User, *utils.AppError) {
-	utils.Info(ctx, "Fetching user profile", map[string]any{"user_id": userId})
-
-	user, err := s.userRepo.FindByID(ctx, s.db, userId)
-	if err != nil {
-		utils.Error(ctx, "Error retrieving user profile", map[string]any{"user_id": userId, "err": err.Error()})
-		return nil, utils.InternalServerError("Error finding user", err)
-	}
-
-	utils.Info(ctx, "User profile fetched successfully", map[string]any{"user_id": userId})
-	return user, nil
-}
-
 func (s *authService) VerifyEmail(ctx context.Context, token string) *utils.AppError {
 	utils.Info(ctx, "Email verification attempt", map[string]any{"token": token})
 
@@ -214,11 +200,6 @@ func (s *authService) VerifyEmail(ctx context.Context, token string) *utils.AppE
 		return utils.InternalServerError("Error finding user", err)
 	}
 
-	if user.Verified {
-		utils.Warn(ctx, "Email already verified", map[string]any{"user_id": userId})
-		return utils.ConflictError("Email already verified", err)
-	}
-
 	user.Verified = true
 	if err := s.userRepo.Update(ctx, s.db, user); err != nil {
 		utils.Error(ctx, "Error updating user verification", map[string]any{"user_id": userId, "err": err.Error()})
@@ -236,10 +217,6 @@ func (s *authService) ResendVerificationEmail(ctx context.Context, userID uint, 
 	if err != nil {
 		utils.Error(ctx, "Error finding user for resend verification", map[string]any{"user_id": userID, "err": err.Error()})
 		return 0, utils.InternalServerError("Error finding user", err)
-	}
-	if user.Verified {
-		utils.Warn(ctx, "User already verified", map[string]any{"user_id": userID})
-		return 0, utils.ConflictError("Email already verified", err)
 	}
 
 	ttl, err := s.redis.TTL(ctx, utils.GetEmailVerificationTokenKey(user.Email)).Result()
@@ -282,10 +259,6 @@ func (s *authService) ResendVerificationEmailTTL(ctx context.Context, userId uin
 	if err != nil {
 		utils.Error(ctx, "Error finding user for TTL check", map[string]any{"user_id": userId, "err": err.Error()})
 		return 0, utils.InternalServerError("Error finding user", err)
-	}
-	if user.Verified {
-		utils.Warn(ctx, "User already verified", map[string]any{"user_id": userId})
-		return 0, utils.ConflictError("Email already verified", err)
 	}
 
 	ttl, err := s.redis.TTL(ctx, utils.GetEmailVerificationTokenKey(user.Email)).Result()

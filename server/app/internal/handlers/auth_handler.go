@@ -17,7 +17,6 @@ type AuthHandler interface {
 	LoginHandler(c *gin.Context)
 	LogoutHandler(c *gin.Context)
 	RefreshHandler(c *gin.Context)
-	ProfileHandler(c *gin.Context)
 	VerifyHandler(c *gin.Context)
 	ResendVerificationHandler(c *gin.Context)
 	ResendVerificationEmailTTLHandler(c *gin.Context)
@@ -50,7 +49,7 @@ func (h *authHandler) RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, fmt.Sprintf("%s://%s", h.cfg.AppScheme, h.cfg.AppDomain))
+	user, err := h.authService.Register(c.Request.Context(), req.Name, req.Email, req.Password, fmt.Sprintf("%s://%s", h.cfg.AppScheme, h.cfg.AppDomain))
 	if err != nil {
 		utils.ErrorResponse(c, err)
 		return
@@ -128,27 +127,27 @@ func (h *authHandler) RefreshHandler(c *gin.Context) {
 	})
 }
 
-func (h *authHandler) ProfileHandler(c *gin.Context) {
-	userId, exists := c.Get("user_id")
-	if !exists {
-		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "User not authenticated", nil))
-		return
-	}
+// func (h *authHandler) ProfileHandler(c *gin.Context) {
+// 	userId, exists := c.Get("user_id")
+// 	if !exists {
+// 		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "User not authenticated", nil))
+// 		return
+// 	}
 
-	userIdUint, ok := userId.(uint)
-	if !ok {
-		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "User not authenticated", nil))
-		return
-	}
+// 	userIdUint, ok := userId.(uint)
+// 	if !ok {
+// 		utils.ErrorResponse(c, utils.NewAppError(http.StatusUnauthorized, utils.Unauthorized, "User not authenticated", nil))
+// 		return
+// 	}
 
-	user, err := h.authService.Profile(c.Request.Context(), userIdUint)
-	if err != nil {
-		utils.ErrorResponse(c, err)
-		return
-	}
+// 	user, err := h.authService.Profile(c.Request.Context(), userIdUint)
+// 	if err != nil {
+// 		utils.ErrorResponse(c, err)
+// 		return
+// 	}
 
-	utils.SuccessResponse(c, user)
-}
+// 	utils.SuccessResponse(c, user)
+// }
 
 func (h *authHandler) VerifyHandler(c *gin.Context) {
 	token := c.Query("token")

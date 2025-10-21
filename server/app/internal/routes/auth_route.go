@@ -23,5 +23,4 @@ func AuthRoutes(r *gin.RouterGroup, h handlers.AuthHandler, jwtUtil *utils.JWTUt
 		auth.GET("/google/login", h.GoogleLoginHandler)
 		auth.GET("/google/callback", h.GoogleCallbackHandler)
 	}
-	r.GET("/profile", middlewares.AuthMiddleware(jwtUtil), h.ProfileHandler)
 }

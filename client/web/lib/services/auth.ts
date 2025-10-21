@@ -1,11 +1,7 @@
-import {
-  AuthRequest,
-  TokenResponse,
-  TTLResponse,
-  UserResponse,
-} from "@/types/auth";
+import { AuthRequest, TokenResponse, TTLResponse } from "@/types/auth";
 import api from "../api";
 import { ApiResponse } from "@/types/response";
+import { UserResponse } from "@/types/user";
 
 export const authService = {
   register: async (data: AuthRequest): Promise<ApiResponse<UserResponse>> => {
@@ -22,10 +18,6 @@ export const authService = {
 
   refresh: async (): Promise<ApiResponse<TokenResponse>> => {
     return await api.post("/auth/refresh");
-  },
-
-  profile: async (): Promise<ApiResponse<UserResponse>> => {
-    return await api.get("/profile");
   },
 
   verify: async (token: string): Promise<ApiResponse<null>> => {

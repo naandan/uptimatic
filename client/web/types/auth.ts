@@ -8,12 +8,6 @@ export type TokenResponse = {
   refresh_token: string;
 };
 
-export type UserResponse = {
-  id: number;
-  email: string;
-  created_at: string;
-};
-
 export type TTLResponse = {
   ttl: number;
 };
