@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/lib/services/user";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -170,7 +171,9 @@ export default function ProfilePage() {
 
             {preview ? (
               <div className="flex flex-col items-center space-y-3">
-                <img
+                <Image
+                  width={100}
+                  height={100}
                   src={preview}
                   alt="Preview"
                   className="w-28 h-28 rounded-full object-cover shadow"
