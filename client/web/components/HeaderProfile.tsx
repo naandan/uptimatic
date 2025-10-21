@@ -81,7 +81,7 @@ export default function HeaderProfile() {
           onClick={handleLogout}
           className="text-red-600 focus:text-red-700"
         >
-          <LogOut className="w-4 h-4 mr-2" /> Logout
+          <LogOut className="w-4 h-4 mr-2 text-red-600" /> Logout
         </DropdownMenuItem>
 
         {/* Optional: footer */}

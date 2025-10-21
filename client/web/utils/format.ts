@@ -7,6 +7,14 @@ export const formatDateGMT7 = (dateStr: string) => {
   });
 };
 
+export const formatMonthGMT7 = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+  });
+};
+
 export const formatTimeGMT7 = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleTimeString("en-GB", {

@@ -377,7 +377,7 @@ func (s *authService) GoogleCallback(ctx context.Context, code string) (string, 
 	user, err := s.userRepo.FindByEmail(ctx, s.db, email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			user = &models.User{Email: email, Verified: true}
+			user = &models.User{Name: oauthUser["name"].(string), Email: email, Verified: true}
 			if err := s.userRepo.Create(ctx, s.db, user); err != nil {
 				utils.Error(ctx, "Failed to create user", map[string]any{"err": err.Error()})
 				return "", "", utils.InternalServerError("Failed to create user", err)
