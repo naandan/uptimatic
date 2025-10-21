@@ -8,6 +8,7 @@ import (
 	"uptimatic/internal/google"
 	"uptimatic/internal/handlers"
 	"uptimatic/internal/middlewares"
+	"uptimatic/internal/minio"
 	"uptimatic/internal/repositories"
 	"uptimatic/internal/routes"
 	"uptimatic/internal/services"
@@ -33,15 +34,22 @@ func Start() {
 	googleClient := google.NewGoogleClient(&cfg)
 	validate := validator.New()
 
+	minio, err := minio.NewMinioUtil(context.Background(), &cfg)
+	if err != nil {
+		utils.Fatal(context.Background(), "failed to connect minio", map[string]any{"error": err})
+	}
+
 	userRepo := repositories.NewUserRepository()
 	urlRepo := repositories.NewUrlRepository()
 	logRepo := repositories.NewLogRepository()
 
 	authService := services.NewAuthService(pgsql, userRepo, redis, jwtUtil, asyncClient, googleClient)
 	urlService := services.NewUrlService(pgsql, urlRepo, logRepo)
+	userService := services.NewUserService(pgsql, userRepo, minio, redis, jwtUtil, asyncClient)
 
 	authHandler := handlers.NewAuthHandler(authService, validate, &cfg)
 	urlHandler := handlers.NewURLHandler(urlService, validate)
+	userHandler := handlers.NewUserHandler(userService, validate, &cfg)
 
 	if cfg.AppDebug {
 		gin.SetMode(gin.DebugMode)
@@ -56,6 +64,7 @@ func Start() {
 	api := r.Group("/api/v1")
 	{
 		routes.AuthRoutes(api, authHandler, &jwtUtil)
+		routes.UserRoutes(api, userHandler, &jwtUtil)
 		routes.UrlRoutes(api, urlHandler, &jwtUtil)
 	}
 

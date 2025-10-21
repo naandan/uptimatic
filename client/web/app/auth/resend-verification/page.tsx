@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { authService } from "@/lib/services/auth";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/helper";
+import { userService } from "@/lib/services/user";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     const checkLogin = async () => {
       setLoading(true);
-      await authService.profile();
+      await userService.me();
       const res = await authService.resendVerificationEmailTTL();
       if (!res.success) {
         toast.error(getErrorMessage(res.error?.code || ""));

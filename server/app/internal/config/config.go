@@ -37,6 +37,12 @@ type Config struct {
 
 	GoogleClientId     string
 	GoogleClientSecret string
+
+	StorageBucket    string
+	StorageEndpoint  string
+	StorageAccessKey string
+	StorageSecretKey string
+	StorageUseSSL    bool
 }
 
 func LoadConfig() (Config, error) {
@@ -82,6 +88,12 @@ func LoadConfig() (Config, error) {
 
 		GoogleClientId:     viper.GetString("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: viper.GetString("GOOGLE_CLIENT_SECRET"),
+
+		StorageBucket:    viper.GetString("STORAGE_BUCKET"),
+		StorageEndpoint:  viper.GetString("STORAGE_ENDPOINT"),
+		StorageAccessKey: viper.GetString("STORAGE_ACCESS_KEY"),
+		StorageSecretKey: viper.GetString("STORAGE_SECRET_KEY"),
+		StorageUseSSL:    viper.GetBool("STORAGE_USE_SSL"),
 	}
 
 	return cfg, nil

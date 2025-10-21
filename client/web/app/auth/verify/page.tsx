@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/lib/services/auth";
+import { userService } from "@/lib/services/user";
 
 function VerifyEmailForm() {
   const searchParams = useSearchParams();
@@ -27,7 +28,7 @@ function VerifyEmailForm() {
         setMessage("Token tidak valid atau sudah kedaluwarsa.");
         return;
       } else {
-        const res = await authService.profile();
+        const res = await userService.me();
         if (res.success) {
           await authService.refresh();
         }

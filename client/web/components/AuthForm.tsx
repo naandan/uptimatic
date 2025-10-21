@@ -28,9 +28,10 @@ interface AuthFormProps {
 }
 
 export const AuthForm = ({ type }: AuthFormProps) => {
-  const { setLoggedIn } = useAuth();
+  const { setIsLoggedIn } = useAuth();
   const router = useRouter();
   const [payload, setPayload] = useState({
+    name: "",
     email: "",
     password: "",
   });
@@ -52,13 +53,15 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         }
       }
       setLoading(false);
+      toast.success("Register berhasil");
+      router.push("/auth/login");
     } else {
       const res = await authService.login(payload);
       if (!res.success) {
         toast.error(getErrorMessage(res.error?.code || ""));
       } else {
         toast.success("Login berhasil");
-        setLoggedIn(true);
+        setIsLoggedIn(true);
         router.push("/uptime");
       }
       setLoading(false);
@@ -86,7 +89,24 @@ export const AuthForm = ({ type }: AuthFormProps) => {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {type === "register" && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nama</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    autoComplete="name"
+                    value={payload.name}
+                    onChange={(e) =>
+                      setPayload({ ...payload, name: e.target.value })
+                    }
+                    required
+                  />
+                  <ErrorInputMessage errors={errors} field="name" />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Alamat Email</Label>
                 <Input
