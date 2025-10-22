@@ -129,7 +129,7 @@ export default function URLList() {
   };
 
   return (
-    <div className="py-12 min-h-screen max-w-7xl mx-auto px-4">
+    <div className="py-12 min-h-screen max-w-7xl mx-auto px-6 md:px-12">
       {/* Header + Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <Input
