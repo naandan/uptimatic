@@ -48,7 +48,7 @@ func (r *statusLogRepository) GetUptimeStats(ctx context.Context, tx *gorm.DB, u
 
 	query := `
 		SELECT
-			date_trunc(?, checked_at) AS bucket_start,
+			date_trunc(?, checked_at AT TIME ZONE 'Asia/Jakarta') AS bucket_start,
 			COUNT(*) AS total_checks,
 			COUNT(*) FILTER (WHERE status BETWEEN 200 AND 299) AS up_checks,
 			ROUND(
@@ -57,7 +57,7 @@ func (r *statusLogRepository) GetUptimeStats(ctx context.Context, tx *gorm.DB, u
 			) AS uptime_percent
 		FROM status_logs
 		WHERE url_id = ?
-		  AND checked_at BETWEEN ? AND ?
+		AND checked_at BETWEEN ? AND ?
 		GROUP BY bucket_start
 		ORDER BY bucket_start ASC;
 	`

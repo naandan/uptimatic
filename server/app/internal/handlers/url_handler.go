@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type URLHandler interface {
@@ -52,7 +53,7 @@ func (h *urlHandler) CreateHandler(c *gin.Context) {
 
 func (h *urlHandler) UpdateHandler(c *gin.Context) {
 	id := c.Param("id")
-	idUint, err := strconv.ParseUint(id, 10, 32)
+	publicID, err := uuid.Parse(id)
 	if err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
@@ -68,7 +69,7 @@ func (h *urlHandler) UpdateHandler(c *gin.Context) {
 		return
 	}
 
-	urlResponse, errSvc := h.urlService.Update(c.Request.Context(), &urlRequest, uint(idUint))
+	urlResponse, errSvc := h.urlService.Update(c.Request.Context(), &urlRequest, publicID)
 	if errSvc != nil {
 		utils.ErrorResponse(c, errSvc)
 		return
@@ -79,13 +80,13 @@ func (h *urlHandler) UpdateHandler(c *gin.Context) {
 
 func (h *urlHandler) DeleteHandler(c *gin.Context) {
 	id := c.Param("id")
-	idUint, err := strconv.ParseUint(id, 10, 32)
+	publicID, err := uuid.Parse(id)
 	if err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
-	if err := h.urlService.Delete(c.Request.Context(), uint(idUint)); err != nil {
+	if err := h.urlService.Delete(c.Request.Context(), publicID); err != nil {
 		utils.ErrorResponse(c, err)
 		return
 	}
@@ -95,13 +96,13 @@ func (h *urlHandler) DeleteHandler(c *gin.Context) {
 
 func (h *urlHandler) GetHandler(c *gin.Context) {
 	id := c.Param("id")
-	idUint, err := strconv.ParseUint(id, 10, 32)
+	publicID, err := uuid.Parse(id)
 	if err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
-	urlResponse, errSvc := h.urlService.FindByID(c.Request.Context(), uint(idUint))
+	urlResponse, errSvc := h.urlService.FindByID(c.Request.Context(), publicID)
 	if errSvc != nil {
 		utils.ErrorResponse(c, errSvc)
 		return
@@ -158,13 +159,13 @@ func (h *urlHandler) GetUptimeStats(c *gin.Context) {
 	}
 
 	offset, _ := strconv.Atoi(offsetStr)
-	idUint, err := strconv.ParseUint(id, 10, 32)
+	idUUID, err := uuid.Parse(id)
 	if err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
-	stats, errSvc := h.urlService.GetUptimeStats(c.Request.Context(), uint(idUint), mode, offset)
+	stats, errSvc := h.urlService.GetUptimeStats(c.Request.Context(), idUUID, mode, offset)
 	if errSvc != nil {
 		utils.ErrorResponse(c, errSvc)
 		return

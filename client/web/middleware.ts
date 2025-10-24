@@ -11,8 +11,6 @@ export function middleware(req: NextRequest) {
   const verifyRoutes = ["/auth/verify", "/auth/verify-success"];
   const resendRoute = "/auth/resend-verification";
 
-  console.log(token);
-
   if (!token) {
     if (protectedRoutes.some((p) => pathname.startsWith(p))) {
       return NextResponse.redirect(new URL("/auth/login", req.url));
@@ -31,7 +29,6 @@ export function middleware(req: NextRequest) {
     const decodedPayload = JSON.parse(
       Buffer.from(payloadBase64, "base64").toString(),
     );
-    console.log(decodedPayload);
     verified = decodedPayload.verified === true;
   } catch {
     verified = false;

@@ -4,6 +4,7 @@ import (
 	"context"
 	"uptimatic/internal/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -11,7 +12,7 @@ type UrlRepository interface {
 	Create(ctx context.Context, tx *gorm.DB, url *models.URL) error
 	Update(ctx context.Context, tx *gorm.DB, url *models.URL) error
 	Delete(ctx context.Context, tx *gorm.DB, url *models.URL) error
-	FindByID(ctx context.Context, tx *gorm.DB, id uint) (*models.URL, error)
+	FindByPublicID(ctx context.Context, tx *gorm.DB, publicID uuid.UUID) (*models.URL, error)
 	ListByUserID(ctx context.Context, tx *gorm.DB, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]models.URL, int, error)
 	GetActiveURLs(ctx context.Context, tx *gorm.DB) ([]models.URL, error)
 }
@@ -34,9 +35,9 @@ func (r *urlRepository) Delete(ctx context.Context, tx *gorm.DB, url *models.URL
 	return tx.WithContext(ctx).Delete(url).Error
 }
 
-func (r *urlRepository) FindByID(ctx context.Context, tx *gorm.DB, id uint) (*models.URL, error) {
+func (r *urlRepository) FindByPublicID(ctx context.Context, tx *gorm.DB, publicID uuid.UUID) (*models.URL, error) {
 	var url models.URL
-	err := tx.WithContext(ctx).First(&url, id).Error
+	err := tx.WithContext(ctx).First(&url, "public_id = ?", publicID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -63,18 +64,18 @@ func (r *urlRepository) ListByUserID(
 	}
 
 	if searchLabel != "" {
-		query = query.Where("label ILIKE ?", "%"+searchLabel+"%") // PostgreSQL
+		query = query.Where("label ILIKE ?", "%"+searchLabel+"%")
 	}
 
 	if err := query.Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
 
-	if sortBy != "label" && sortBy != "created_at" {
-		sortBy = "created_at"
+	if sortBy == "created_at" {
+		query = query.Order("created_at " + "DESC")
+	} else {
+		query = query.Order("label" + " " + "ASC")
 	}
-
-	query = query.Order(sortBy + " " + "asc")
 
 	if err := query.Offset((page - 1) * perPage).Limit(perPage).Find(&urls).Error; err != nil {
 		return nil, 0, err

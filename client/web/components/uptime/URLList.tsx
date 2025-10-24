@@ -95,7 +95,7 @@ export default function URLList() {
       toast.success("URL berhasil diperbarui");
     }
   };
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     const res = await urlService.delete(id);
     if (!res.success) {
       toast.error(getErrorMessage(res.error?.code || ""));
@@ -106,7 +106,7 @@ export default function URLList() {
     setDeleteData(null);
   };
 
-  const handleToggle = async (id: number) => {
+  const handleToggle = async (id: string) => {
     if (!urls) return;
     const url = urls.find((url) => url.id === id);
     if (!url) return;
@@ -211,7 +211,7 @@ export default function URLList() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-4 mt-6">
+        <div className="flex justify-center items-center gap-4 mt-6">
           <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>
             <ChevronLeft />
           </Button>

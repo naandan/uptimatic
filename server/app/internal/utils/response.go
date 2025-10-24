@@ -53,10 +53,10 @@ func PaginatedResponse(c *gin.Context, data any, count, limit, page, totalPage i
 		"request_id": getRequestID(c.Request.Context()),
 		"data":       data,
 		"meta": gin.H{
-			"total":       count,
-			"limit":       limit,
-			"page":        page,
-			"total_pages": totalPage,
+			"total":      count,
+			"limit":      limit,
+			"page":       page,
+			"total_page": totalPage,
 		},
 	})
 }

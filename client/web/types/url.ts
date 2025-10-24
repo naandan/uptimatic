@@ -5,7 +5,7 @@ export type URLRequest = {
 };
 
 export type URLResponse = {
-  id: number;
+  id: string;
   label: string;
   url: string;
   interval: number;

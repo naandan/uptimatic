@@ -20,9 +20,9 @@ export interface ApiError {
 }
 
 export interface ApiMeta {
-  total: number;
   limit: number;
   page: number;
+  total: number;
   total_page: number;
 }
 
