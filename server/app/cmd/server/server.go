@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"time"
 	"uptimatic/internal/config"
 	"uptimatic/internal/db"
 	"uptimatic/internal/google"
@@ -14,6 +15,7 @@ import (
 	"uptimatic/internal/services"
 	"uptimatic/internal/utils"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -25,6 +27,8 @@ func Start() {
 	}
 
 	utils.InitLogger(cfg.AppLogLevel)
+	_ = utils.InitSentry(cfg.SentryDSN)
+	defer sentry.Flush(2 * time.Second)
 
 	pgsql := db.NewPostgresClient(&cfg)
 	redis := db.NewRedisClient(&cfg)
@@ -36,7 +40,7 @@ func Start() {
 
 	minio, err := minio.NewMinioUtil(context.Background(), &cfg)
 	if err != nil {
-		utils.Fatal(context.Background(), "failed to connect minio", map[string]any{"error": err})
+		utils.Fatal(context.Background(), "Failed to connect minio", map[string]any{"error": err})
 	}
 
 	userRepo := repositories.NewUserRepository()
@@ -70,6 +74,6 @@ func Start() {
 
 	addr := ":" + fmt.Sprint(cfg.AppPort)
 	if err := r.Run(addr); err != nil {
-		utils.Error(context.Background(), "failed to start server", map[string]any{"error": err})
+		utils.Fatal(context.Background(), "Failed to start server", map[string]any{"error": err})
 	}
 }

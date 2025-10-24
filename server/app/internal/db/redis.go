@@ -17,7 +17,7 @@ func NewRedisClient(cfg *config.Config) *redis.Client {
 		DB:       0,
 	})
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		utils.Fatal(context.Background(), "failed to connect redis", map[string]any{"error": err})
+		utils.Fatal(context.Background(), "Failed to connect redis", map[string]any{"error": err})
 	}
 
 	return rdb

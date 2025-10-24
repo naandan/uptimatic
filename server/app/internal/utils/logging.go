@@ -2,9 +2,11 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 )
 
@@ -43,6 +45,16 @@ func InitLogger(levelStr string) {
 		stdout: writerAdapter{stdoutWriter},
 		stderr: writerAdapter{stderrWriter},
 	}).With().Timestamp().Logger()
+}
+
+func InitSentry(dsn string) error {
+	if dsn == "" {
+		return nil
+	}
+	return sentry.Init(sentry.ClientOptions{
+		Dsn:              dsn,
+		TracesSampleRate: 1.0,
+	})
 }
 
 type writerAdapter struct {
@@ -103,10 +115,29 @@ func Warn(c context.Context, msg string, extra map[string]any) {
 
 func Error(c context.Context, msg string, extra map[string]any) {
 	fields := commonFields(c, extra)
+	sendToSentry(msg, fields)
 	Logger.Error().Fields(fields).Msg(msg)
 }
 
 func Fatal(c context.Context, msg string, extra map[string]any) {
 	fields := commonFields(c, extra)
+
+	sendToSentry(msg, fields)
+	sentry.Flush(2 * time.Second)
+
 	Logger.Fatal().Fields(fields).Msg(msg)
+	os.Exit(1)
+}
+
+func sendToSentry(msg string, fields map[string]any) {
+	sentry.WithScope(func(scope *sentry.Scope) {
+		for k, v := range fields {
+			if k == string(TraceKey) {
+				scope.SetTag("trace_id", fmt.Sprintf("%v", v))
+			} else {
+				scope.SetExtra(k, v)
+			}
+		}
+		sentry.CaptureMessage(msg)
+	})
 }
