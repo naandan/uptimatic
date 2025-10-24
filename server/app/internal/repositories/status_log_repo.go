@@ -11,6 +11,7 @@ import (
 type StatusLogRepository interface {
 	Create(ctx context.Context, tx *gorm.DB, log *models.StatusLog) error
 	GetByID(ctx context.Context, tx *gorm.DB, id uint) (*models.StatusLog, error)
+	GetLastLogByURLID(ctx context.Context, tx *gorm.DB, urlID uint) (*models.StatusLog, error)
 	ListByURLID(ctx context.Context, tx *gorm.DB, urlID uint) ([]models.StatusLog, error)
 	GetUptimeStats(ctx context.Context, tx *gorm.DB, urlID uint, truncUnit string, start, end time.Time) ([]models.UptimeStat, error)
 }
@@ -28,6 +29,15 @@ func (r *statusLogRepository) Create(ctx context.Context, tx *gorm.DB, log *mode
 func (r *statusLogRepository) GetByID(ctx context.Context, tx *gorm.DB, id uint) (*models.StatusLog, error) {
 	var log models.StatusLog
 	err := tx.WithContext(ctx).First(&log, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &log, nil
+}
+
+func (r *statusLogRepository) GetLastLogByURLID(ctx context.Context, tx *gorm.DB, urlID uint) (*models.StatusLog, error) {
+	var log models.StatusLog
+	err := tx.WithContext(ctx).Where("url_id = ?", urlID).Last(&log).Error
 	if err != nil {
 		return nil, err
 	}

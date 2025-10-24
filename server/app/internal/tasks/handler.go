@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -58,6 +59,24 @@ func (h *TaskHandler) SendEmailHandler(ctx context.Context, t *asynq.Task) error
 	return nil
 }
 
+func (h *TaskHandler) enqueueEmail(to, subject string, emailType email.EmailType, data map[string]any) error {
+	emailPayload, err := json.Marshal(email.EmailPayload{
+		To:      to,
+		Subject: subject,
+		Type:    emailType,
+		Data:    data,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to marshal email payload: %w", err)
+	}
+
+	task := asynq.NewTask(TaskSendEmail, emailPayload)
+	if _, err := h.client.Enqueue(task); err != nil {
+		return fmt.Errorf("failed to enqueue email task: %w", err)
+	}
+	return nil
+}
+
 func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) error {
 	var payload models.URL
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
@@ -71,16 +90,38 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		"label":  payload.Label,
 	})
 
-	client := http.Client{Timeout: 30 * time.Second}
-	start := time.Now()
-	resp, err := client.Get(payload.URL)
-	duration := time.Since(start)
-
+	lastLog, err := h.logRepo.GetLastLogByURLID(ctx, h.pgsql, payload.ID)
+	var lastStatus int64
 	if err != nil {
-		utils.Error(ctx, "HTTP request failed", map[string]any{
-			"url":   payload.URL,
-			"error": err.Error(),
-		})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.Debug(ctx, "No previous log found, treating as first check", nil)
+			lastStatus = 0
+		} else {
+			utils.Error(ctx, "Failed to get last log", map[string]any{"error": err.Error()})
+			return fmt.Errorf("failed to get last log: %w", err)
+		}
+	} else {
+		lastStatus, err = strconv.ParseInt(lastLog.Status, 10, 64)
+		if err != nil {
+			utils.Error(ctx, "Failed to parse last status", map[string]any{"error": err.Error()})
+			return fmt.Errorf("failed to parse last status: %w", err)
+		}
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	ctxReq, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctxReq, http.MethodGet, payload.URL, nil)
+	if err != nil {
+		utils.Error(ctx, "Failed to create HTTP request", map[string]any{"error": err.Error()})
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	start := time.Now()
+	resp, err := client.Do(req)
+	if err != nil {
+		utils.Error(ctx, "HTTP request failed", map[string]any{"url": payload.URL, "error": err.Error()})
 		return fmt.Errorf("failed to check URL %s: %w", payload.URL, err)
 	}
 	defer func() {
@@ -88,6 +129,8 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 			utils.Error(ctx, "Failed to close response body", map[string]any{"error": err.Error()})
 		}
 	}()
+
+	duration := time.Since(start)
 
 	log := models.StatusLog{
 		URLID:        payload.ID,
@@ -97,10 +140,7 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 	}
 
 	if err := h.logRepo.Create(ctx, h.pgsql, &log); err != nil {
-		utils.Error(ctx, "Failed to create status log", map[string]any{
-			"url_id": payload.ID,
-			"error":  err.Error(),
-		})
+		utils.Error(ctx, "Failed to create status log", map[string]any{"url_id": payload.ID, "error": err.Error()})
 		return fmt.Errorf("failed to create status log: %w", err)
 	}
 
@@ -110,36 +150,39 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		"response_time": log.ResponseTime,
 	})
 
-	if resp.StatusCode >= 400 {
-		utils.Warn(ctx, "URL is down, sending notification", map[string]any{
-			"url":    payload.URL,
-			"status": resp.StatusCode,
-		})
-
+	const downThreshold = 400
+	if resp.StatusCode != int(lastStatus) {
 		loc, _ := time.LoadLocation("Asia/Jakarta")
-		emailPayload, err := json.Marshal(email.EmailPayload{
-			To:      payload.User.Email,
-			Subject: "Uptime Alert - Website Down",
-			Type:    email.EmailDown,
-			Data: map[string]any{
-				"LogoURL":      fmt.Sprintf("%s://%s/icon.png", h.cfg.AppScheme, h.cfg.AppDomain),
-				"Label":        payload.Label,
-				"URL":          payload.URL,
-				"Status":       log.Status,
-				"ResponseTime": log.ResponseTime,
-				"CheckedAt":    log.CheckedAt.In(loc).Format("2006-01-02 15:04:05"),
-			},
-		})
 
-		if err != nil {
-			utils.Error(ctx, "Failed to encode email payload", map[string]any{"error": err.Error()})
-			return fmt.Errorf("failed to json encode payload: %w", err)
+		data := map[string]any{
+			"LogoURL":      fmt.Sprintf("%s://%s/icon.png", h.cfg.AppScheme, h.cfg.AppDomain),
+			"Label":        payload.Label,
+			"URL":          payload.URL,
+			"Status":       log.Status,
+			"ResponseTime": log.ResponseTime,
+			"CheckedAt":    log.CheckedAt.In(loc).Format("2006-01-02 15:04:05"),
 		}
 
-		task := asynq.NewTask(TaskSendEmail, emailPayload)
-		if _, err := h.client.Enqueue(task); err != nil {
-			utils.Error(ctx, "Failed to enqueue email task", map[string]any{"url": payload.URL, "error": err.Error()})
-			return fmt.Errorf("failed to enqueue email task: %w", err)
+		if resp.StatusCode >= downThreshold {
+			utils.Warn(ctx, "URL is down, sending notification", map[string]any{
+				"url":    payload.URL,
+				"status": resp.StatusCode,
+			})
+
+			if err := h.enqueueEmail(payload.User.Email, "Uptime Alert - Website Down", email.EmailDown, data); err != nil {
+				utils.Error(ctx, "Failed to enqueue down email", map[string]any{"error": err.Error()})
+				return fmt.Errorf("failed to enqueue down email: %w", err)
+			}
+		} else {
+			utils.Info(ctx, "URL is up, sending notification", map[string]any{
+				"url":    payload.URL,
+				"status": resp.StatusCode,
+			})
+
+			if err := h.enqueueEmail(payload.User.Email, "Uptime Alert - Website Up", email.EmailUp, data); err != nil {
+				utils.Error(ctx, "Failed to enqueue up email", map[string]any{"error": err.Error()})
+				return fmt.Errorf("failed to enqueue up email: %w", err)
+			}
 		}
 	}
 
@@ -156,6 +199,7 @@ func (h *TaskHandler) CheckUptimeHandler(ctx context.Context, t *asynq.Task) err
 		"url_id": payload.ID,
 		"url":    payload.URL,
 	})
+
 	return nil
 }
 
