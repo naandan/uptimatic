@@ -10,17 +10,17 @@ export const urlService = {
   },
 
   update: async (
-    id: number | undefined,
+    id: string | undefined,
     data: Partial<URLRequest>,
   ): Promise<ApiResponse<URLResponse>> => {
     return await api.put(`/urls/${id}`, data);
   },
 
-  delete: async (id: number): Promise<ApiResponse<null>> => {
+  delete: async (id: string): Promise<ApiResponse<null>> => {
     return await api.delete(`/urls/${id}`);
   },
 
-  get: async (id: number): Promise<ApiResponse<URLResponse>> => {
+  get: async (id: string): Promise<ApiResponse<URLResponse>> => {
     return await api.get(`/urls/${id}`);
   },
 
@@ -29,7 +29,7 @@ export const urlService = {
   },
 
   stats: async (
-    id: number,
+    id: string,
     mode: "day" | "month",
     offset: number,
   ): Promise<ApiResponse<URLStats[]>> => {

@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 
 interface URLCardProps {
   data: URLResponse;
-  onToggle: (id: number) => void;
+  onToggle: (id: string) => void;
   onEdit: () => void;
   onDelete: () => void;
 }

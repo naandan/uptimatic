@@ -51,9 +51,8 @@ const getBarColor = (uptime: number) => {
 };
 
 export default function UptimeStats() {
-  const params = useParams();
-  const id = params.id;
-  const idNumber = Number(id);
+  const { id } = useParams();
+  const publicId = String(id);
   const router = useRouter();
   const [mode, setMode] = useState<"day" | "month">("day");
   const [offset, setOffset] = useState(0);
@@ -62,18 +61,18 @@ export default function UptimeStats() {
   const [url, setUrl] = useState<URLResponse>();
 
   const fetchURL = useCallback(async () => {
-    const res = await urlService.get(idNumber);
+    const res = await urlService.get(publicId);
     if (!res.success) {
       toast.error("URL tidak ditemukan");
       return;
     }
     if (!res.data) return;
     setUrl(res.data);
-  }, [idNumber]);
+  }, [publicId]);
 
   const fetchStats = useCallback(async () => {
     setLoading(true);
-    const res = await urlService.stats(idNumber, mode, offset);
+    const res = await urlService.stats(publicId, mode, offset);
     if (res.success) {
       setData(res.data || []);
     } else {
@@ -81,7 +80,7 @@ export default function UptimeStats() {
       setData([]);
     }
     setLoading(false);
-  }, [idNumber, mode, offset]);
+  }, [publicId, mode, offset]);
 
   useEffect(() => {
     fetchStats();
@@ -99,16 +98,12 @@ export default function UptimeStats() {
   const handlePrev = () => setOffset(offset + 1);
   const handleNext = () => setOffset(Math.max(0, offset - 1));
 
-  const avgUptime =
-    data.length > 0
-      ? (data.reduce((a, b) => a + b.uptime_percent, 0) / data.length).toFixed(
-          2,
-        )
-      : 0;
-
   const totalChecks = data.reduce((a, b) => a + b.total_checks, 0);
   const upChecks = data.reduce((a, b) => a + b.up_checks, 0);
   const downChecks = totalChecks - upChecks;
+
+  const avgUptime =
+    totalChecks > 0 ? Math.round((upChecks * 10000) / totalChecks) / 100 : 0;
 
   const dateRange =
     data.length > 0

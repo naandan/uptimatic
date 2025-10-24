@@ -109,7 +109,6 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!name || !email) return toast.error("Semua field harus diisi!");
     const res = await userService.update(name, email);
-    console.log(res.data);
     if (!res.success) {
       toast.error("Terjadi kesalahan saat memperbarui profil.");
       return;

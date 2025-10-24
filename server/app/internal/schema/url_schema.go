@@ -1,6 +1,10 @@
 package schema
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type UrlRequest struct {
 	Label string `json:"label" validate:"required"`
@@ -10,7 +14,7 @@ type UrlRequest struct {
 }
 
 type UrlResponse struct {
-	ID          uint       `json:"id"`
+	ID          uuid.UUID  `json:"id"`
 	Label       string     `json:"label"`
 	URL         string     `json:"url"`
 	Interval    int        `json:"interval"`
