@@ -43,6 +43,8 @@ type Config struct {
 	StorageAccessKey string
 	StorageSecretKey string
 	StorageUseSSL    bool
+
+	SentryDSN string
 }
 
 func LoadConfig() (Config, error) {
@@ -94,6 +96,8 @@ func LoadConfig() (Config, error) {
 		StorageAccessKey: viper.GetString("STORAGE_ACCESS_KEY"),
 		StorageSecretKey: viper.GetString("STORAGE_SECRET_KEY"),
 		StorageUseSSL:    viper.GetBool("STORAGE_USE_SSL"),
+
+		SentryDSN: viper.GetString("SENTRY_DSN"),
 	}
 
 	return cfg, nil

@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"time"
 	"uptimatic/internal/config"
 	"uptimatic/internal/db"
 	"uptimatic/internal/email"
@@ -9,6 +10,7 @@ import (
 	"uptimatic/internal/tasks"
 	"uptimatic/internal/utils"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/hibiken/asynq"
 )
 
@@ -18,10 +20,12 @@ func Start() {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		utils.Fatal(ctx, "failed to load config", map[string]any{"error": err})
+		utils.Fatal(ctx, "Failed to load config", map[string]any{"error": err})
 	}
 
 	utils.InitLogger(cfg.AppLogLevel)
+	_ = utils.InitSentry(cfg.SentryDSN)
+	defer sentry.Flush(2 * time.Second)
 
 	psql := db.NewPostgresClient(&cfg)
 	client := db.NewAsynqClient(&cfg)
@@ -31,7 +35,7 @@ func Start() {
 
 	mailTask, err := email.NewEmailTask(&cfg)
 	if err != nil {
-		utils.Fatal(ctx, "failed to create email task", map[string]any{"error": err})
+		utils.Fatal(ctx, "Failed to create email task", map[string]any{"error": err})
 	}
 
 	handler := tasks.NewTaskHandler(&cfg, psql, client, mailTask, urlRepo, logRepo)
@@ -45,6 +49,6 @@ func Start() {
 
 	utils.Debug(ctx, "Worker started", nil)
 	if err := srv.Run(mux); err != nil {
-		utils.Fatal(ctx, "failed to start server", map[string]any{"error": err})
+		utils.Fatal(ctx, "Failed to start server", map[string]any{"error": err})
 	}
 }

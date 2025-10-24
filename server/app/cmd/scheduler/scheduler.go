@@ -2,11 +2,13 @@ package scheduler
 
 import (
 	"context"
+	"time"
 	"uptimatic/internal/config"
 	"uptimatic/internal/db"
 	"uptimatic/internal/tasks"
 	"uptimatic/internal/utils"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/hibiken/asynq"
 )
 
@@ -20,6 +22,8 @@ func Start() {
 	}
 
 	utils.InitLogger(cfg.AppLogLevel)
+	_ = utils.InitSentry(cfg.SentryDSN)
+	defer sentry.Flush(2 * time.Second)
 
 	scheduler := db.NewAsynqScheduler(&cfg)
 
@@ -28,12 +32,12 @@ func Start() {
 		asynq.NewTask(tasks.TaskValidateUptime, nil),
 	)
 	if err != nil {
-		utils.Fatal(ctx, "failed to register task", map[string]any{"error": err})
+		utils.Fatal(ctx, "Failed to register task", map[string]any{"error": err})
 		return
 	}
 
 	utils.Debug(ctx, "Scheduler started", nil)
 	if err := scheduler.Run(); err != nil {
-		utils.Fatal(ctx, "failed to run scheduler", map[string]any{"error": err})
+		utils.Fatal(ctx, "Failed to run scheduler", map[string]any{"error": err})
 	}
 }
