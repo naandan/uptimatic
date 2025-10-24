@@ -41,5 +41,18 @@
             "ResponseTime": 354,
             "CheckedAt": "2023-01-01 00:00:00"
         }
+    },
+    "up": {
+    "to": "user@example.com",
+    "subject": "Service Up",
+    "type": "up",
+    "data": {
+            "LogoURL": "https://example.com/logo.png",
+            "Label": "Database",
+            "URL": "https://example.com/",
+            "Status": 200,
+            "ResponseTime": 120,
+            "CheckedAt": "2023-01-01 00:10:00"
+        }
     }
 }
