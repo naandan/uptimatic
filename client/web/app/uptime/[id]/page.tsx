@@ -14,7 +14,6 @@ import {
   formatDateGMT7,
   formatDateTimeGMT7,
   formatMonthGMT7,
-  formatTimeGMT7,
 } from "@/utils/format";
 import {
   ChevronLeft,
@@ -31,16 +30,7 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import { BarChart, Bar, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
