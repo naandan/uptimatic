@@ -58,11 +58,7 @@ func (s *userService) Update(ctx context.Context, userId uint, name, userEmail, 
 		}
 
 		if user.Profile != "" {
-			url, err := s.minio.GetPresignedURL(ctx, user.Profile)
-			if err != nil {
-				utils.Error(ctx, "Error generating presigned URL", map[string]any{"user_id": user.ID, "err": err.Error()})
-				return nil, nil, utils.InternalServerError("Error generating presigned URL", err)
-			}
+			url := s.minio.GetPublicURL(ctx, user.Profile)
 			user.Profile = url
 		}
 
@@ -118,11 +114,7 @@ func (s *userService) Update(ctx context.Context, userId uint, name, userEmail, 
 	}
 
 	if user.Profile != "" {
-		url, err := s.minio.GetPresignedURL(ctx, user.Profile)
-		if err != nil {
-			utils.Error(ctx, "Error generating presigned URL", map[string]any{"user_id": user.ID, "err": err.Error()})
-			return nil, nil, utils.InternalServerError("Error generating presigned URL", err)
-		}
+		url := s.minio.GetPublicURL(ctx, user.Profile)
 		user.Profile = url
 	}
 
@@ -145,11 +137,7 @@ func (s *userService) GetUser(ctx context.Context, userId uint) (*models.User, *
 	}
 
 	if user.Profile != "" {
-		url, err := s.minio.GetPresignedURL(ctx, user.Profile)
-		if err != nil {
-			utils.Error(ctx, "Error generating presigned URL", map[string]any{"user_id": userId, "err": err.Error()})
-			return nil, utils.InternalServerError("Error generating presigned URL", err)
-		}
+		url := s.minio.GetPublicURL(ctx, user.Profile)
 		user.Profile = url
 	}
 
@@ -211,10 +199,7 @@ func (s *userService) UpdateFoto(ctx context.Context, userId uint, fileName stri
 		return "", utils.InternalServerError("Error updating user photo", err)
 	}
 
-	url, err := s.minio.GetPresignedURL(ctx, fileName)
-	if err != nil {
-		return "", utils.InternalServerError("Error generating presigned URL", err)
-	}
+	url := s.minio.GetPublicURL(ctx, fileName)
 
 	utils.Info(ctx, "User photo updated successfully", map[string]any{"user_id": userId})
 	return url, nil

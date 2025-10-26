@@ -14,7 +14,6 @@ import {
   formatDateGMT7,
   formatDateTimeGMT7,
   formatMonthGMT7,
-  formatTimeGMT7,
 } from "@/utils/format";
 import {
   ChevronLeft,
@@ -31,16 +30,7 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import { BarChart, Bar, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -260,22 +250,14 @@ export default function UptimeStats() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <h3 className="text-lg font-semibold text-slate-700 mb-4">
+          <h3 className="text-lg font-semibold text-slate-700 mb-2">
             Grafik Uptime
           </h3>
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart
               data={data}
               margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="bucket_start"
-                tickFormatter={(ts: string) =>
-                  mode === "day" ? formatTimeGMT7(ts) : formatDateGMT7(ts)
-                }
-              />
-              <YAxis domain={[0, 100]} unit="%" />
               <Tooltip
                 contentStyle={{ borderRadius: "8px" }}
                 formatter={(value: number) => [`${value}%`, "Uptime"]}
@@ -285,7 +267,7 @@ export default function UptimeStats() {
                     : formatDateGMT7(label)
                 }
               />
-              <Bar dataKey="uptime_percent" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="uptime_percent" radius={[10, 10, 10, 10]}>
                 {data.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
