@@ -15,6 +15,7 @@ import (
 type MinioUtil struct {
 	Client *minio.Client
 	Bucket string
+	Cfg    *config.Config
 }
 
 func NewMinioUtil(ctx context.Context, cfg *config.Config) (*MinioUtil, error) {
@@ -37,7 +38,7 @@ func NewMinioUtil(ctx context.Context, cfg *config.Config) (*MinioUtil, error) {
 		}
 	}
 
-	return &MinioUtil{Client: client, Bucket: cfg.StorageBucket}, nil
+	return &MinioUtil{Client: client, Bucket: cfg.StorageBucket, Cfg: cfg}, nil
 }
 
 func (m *MinioUtil) UploadFile(ctx context.Context, file multipart.File, fileName, contentType string, size int64) error {
@@ -56,6 +57,10 @@ func (m *MinioUtil) DeleteFile(ctx context.Context, fileName string) error {
 		return err
 	}
 	return nil
+}
+
+func (m *MinioUtil) GetPublicURL(ctx context.Context, fileName string) string {
+	return m.Cfg.AppScheme + "://" + m.Cfg.StorageEndpoint + "/" + m.Bucket + "/" + fileName
 }
 
 func (m *MinioUtil) GetPresignedURL(ctx context.Context, fileName string) (string, error) {
