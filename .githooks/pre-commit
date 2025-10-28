@@ -1,18 +1,34 @@
 #!/bin/bash
 set -e
 
+# --- Server side ---
 cd server/app
 echo "Formatting Go files..."
 goimports -w .
-git add .
+
 echo "Running Go lint..."
-golangci-lint run
+if golangci-lint run; then
+  echo "Go lint passed. Adding changes..."
+  git add .
+else
+  echo "❌ Go lint failed. Commit aborted."
+  exit 1
+fi
 cd ../../
 
+# --- Client side ---
 cd client/web
 echo "Formatting JS/TS files..."
 pnpm format
-git add .
+
 echo "Running JS/TS lint..."
-pnpm lint
+if pnpm lint; then
+  echo "JS/TS lint passed. Adding changes..."
+  git add .
+else
+  echo "❌ JS/TS lint failed. Commit aborted."
+  exit 1
+fi
 cd ../../
+
+echo "✅ All lint checks passed. Safe to commit."

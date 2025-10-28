@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 export function middleware(req: NextRequest) {
   const { cookies, nextUrl } = req;
   const pathname = nextUrl.pathname;
-  console.log("middleware", pathname);
 
   const token = cookies.get("refresh_token")?.value;
 
