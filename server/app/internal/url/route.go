@@ -1,17 +1,16 @@
-package routes
+package url
 
 import (
-	"uptimatic/internal/handlers"
-	"uptimatic/internal/middlewares"
+	"uptimatic/internal/middleware"
 	"uptimatic/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
-func UrlRoutes(r *gin.RouterGroup, h handlers.URLHandler, jwtUtil *utils.JWTUtil) {
+func UrlRoutes(r *gin.RouterGroup, h URLHandler, jwtUtil *utils.JWTUtil) {
 	urls := r.Group("/urls")
-	urls.Use(middlewares.AuthMiddleware(jwtUtil))
-	urls.Use(middlewares.VerifiedMiddleware())
+	urls.Use(middleware.AuthMiddleware(jwtUtil))
+	urls.Use(middleware.VerifiedMiddleware())
 	{
 		urls.POST("", h.CreateHandler)
 		urls.GET("", h.ListHandler)

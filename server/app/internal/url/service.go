@@ -1,4 +1,4 @@
-package services
+package url
 
 import (
 	"context"
@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 	"uptimatic/internal/models"
-	"uptimatic/internal/repositories"
-	"uptimatic/internal/schema"
 	"uptimatic/internal/utils"
 
 	"github.com/google/uuid"
@@ -15,25 +13,25 @@ import (
 )
 
 type URLService interface {
-	Create(ctx context.Context, url *schema.UrlRequest, userID uint) (*schema.UrlResponse, *utils.AppError)
-	Update(ctx context.Context, url *schema.UrlRequest, id uuid.UUID) (*schema.UrlResponse, *utils.AppError)
+	Create(ctx context.Context, url *UrlRequest, userID uint) (*UrlResponse, *utils.AppError)
+	Update(ctx context.Context, url *UrlRequest, id uuid.UUID) (*UrlResponse, *utils.AppError)
 	Delete(ctx context.Context, id uuid.UUID) *utils.AppError
-	FindByID(ctx context.Context, id uuid.UUID) (*schema.UrlResponse, *utils.AppError)
-	ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, *utils.AppError)
+	FindByID(ctx context.Context, id uuid.UUID) (*UrlResponse, *utils.AppError)
+	ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]UrlResponse, int, *utils.AppError)
 	GetUptimeStats(ctx context.Context, urlID uuid.UUID, mode string, offset int) ([]models.UptimeStat, *utils.AppError)
 }
 
 type urlService struct {
 	db            *gorm.DB
-	urlRepo       repositories.UrlRepository
-	statusLogRepo repositories.StatusLogRepository
+	urlRepo       UrlRepository
+	statusLogRepo StatusLogRepository
 }
 
-func NewUrlService(db *gorm.DB, urlRepo repositories.UrlRepository, statusLogRepo repositories.StatusLogRepository) URLService {
+func NewUrlService(db *gorm.DB, urlRepo UrlRepository, statusLogRepo StatusLogRepository) URLService {
 	return &urlService{db, urlRepo, statusLogRepo}
 }
 
-func (s *urlService) Create(ctx context.Context, url *schema.UrlRequest, userID uint) (*schema.UrlResponse, *utils.AppError) {
+func (s *urlService) Create(ctx context.Context, url *UrlRequest, userID uint) (*UrlResponse, *utils.AppError) {
 	utils.Info(ctx, "Creating new URL", map[string]any{"user_id": userID, "label": url.Label, "url": url.Url})
 
 	urlModel := &models.URL{
@@ -52,7 +50,7 @@ func (s *urlService) Create(ctx context.Context, url *schema.UrlRequest, userID 
 	}
 
 	utils.Info(ctx, "URL created successfully", map[string]any{"url_id": urlModel.ID, "user_id": userID})
-	return &schema.UrlResponse{
+	return &UrlResponse{
 		ID:          urlModel.PublicID,
 		Label:       urlModel.Label,
 		URL:         urlModel.URL,
@@ -63,7 +61,7 @@ func (s *urlService) Create(ctx context.Context, url *schema.UrlRequest, userID 
 	}, nil
 }
 
-func (s *urlService) Update(ctx context.Context, url *schema.UrlRequest, id uuid.UUID) (*schema.UrlResponse, *utils.AppError) {
+func (s *urlService) Update(ctx context.Context, url *UrlRequest, id uuid.UUID) (*UrlResponse, *utils.AppError) {
 	utils.Info(ctx, "Updating URL", map[string]any{"url_id": id})
 
 	urlModel, err := s.urlRepo.FindByPublicID(ctx, s.db, id)
@@ -83,7 +81,7 @@ func (s *urlService) Update(ctx context.Context, url *schema.UrlRequest, id uuid
 	}
 
 	utils.Info(ctx, "URL updated successfully", map[string]any{"url_id": id})
-	return &schema.UrlResponse{
+	return &UrlResponse{
 		ID:          urlModel.PublicID,
 		Label:       urlModel.Label,
 		URL:         urlModel.URL,
@@ -113,7 +111,7 @@ func (s *urlService) Delete(ctx context.Context, id uuid.UUID) *utils.AppError {
 	return nil
 }
 
-func (s *urlService) FindByID(ctx context.Context, id uuid.UUID) (*schema.UrlResponse, *utils.AppError) {
+func (s *urlService) FindByID(ctx context.Context, id uuid.UUID) (*UrlResponse, *utils.AppError) {
 	utils.Info(ctx, "Fetching URL by ID", map[string]any{"url_id": id})
 
 	urlModel, err := s.urlRepo.FindByPublicID(ctx, s.db, id)
@@ -123,7 +121,7 @@ func (s *urlService) FindByID(ctx context.Context, id uuid.UUID) (*schema.UrlRes
 	}
 
 	utils.Info(ctx, "URL fetched successfully", map[string]any{"url_id": id})
-	return &schema.UrlResponse{
+	return &UrlResponse{
 		ID:          urlModel.PublicID,
 		Label:       urlModel.Label,
 		URL:         urlModel.URL,
@@ -134,7 +132,7 @@ func (s *urlService) FindByID(ctx context.Context, id uuid.UUID) (*schema.UrlRes
 	}, nil
 }
 
-func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]schema.UrlResponse, int, *utils.AppError) {
+func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]UrlResponse, int, *utils.AppError) {
 	utils.Info(ctx, "Listing URLs by user", map[string]any{"user_id": userID, "page": page, "search": searchLabel})
 
 	urls, count, err := s.urlRepo.ListByUserID(ctx, s.db, userID, page, perPage, active, searchLabel, sortBy)
@@ -143,9 +141,9 @@ func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPag
 		return nil, 0, utils.InternalServerError("Error listing urls", err)
 	}
 
-	var responses []schema.UrlResponse
+	var responses []UrlResponse
 	for _, url := range urls {
-		responses = append(responses, schema.UrlResponse{
+		responses = append(responses, UrlResponse{
 			ID:          url.PublicID,
 			Label:       url.Label,
 			URL:         url.URL,
@@ -158,7 +156,7 @@ func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPag
 
 	if len(responses) == 0 {
 		utils.Warn(ctx, "No URLs found for user", map[string]any{"user_id": userID})
-		return []schema.UrlResponse{}, 0, nil
+		return []UrlResponse{}, 0, nil
 	}
 
 	utils.Info(ctx, "URLs listed successfully", map[string]any{"user_id": userID, "count": len(responses)})

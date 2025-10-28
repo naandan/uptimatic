@@ -38,7 +38,10 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/resend-verification", req.url));
   }
 
-  if (verified && authRoutes.some((p) => pathname.startsWith(p))) {
+  if (
+    (verified && authRoutes.some((p) => pathname.startsWith(p))) ||
+    pathname === "/"
+  ) {
     return NextResponse.redirect(new URL("/uptime", req.url));
   }
 
@@ -51,6 +54,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/uptime/:path*",
     "/user/:path*",
     "/auth/login",

@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"uptimatic/internal/adapters/google"
+	"uptimatic/internal/adapters/minio"
+	"uptimatic/internal/auth"
 	"uptimatic/internal/config"
 	"uptimatic/internal/db"
-	"uptimatic/internal/google"
-	"uptimatic/internal/handlers"
-	"uptimatic/internal/middlewares"
-	"uptimatic/internal/minio"
-	"uptimatic/internal/repositories"
-	"uptimatic/internal/routes"
-	"uptimatic/internal/services"
+	"uptimatic/internal/middleware"
+	"uptimatic/internal/url"
+	"uptimatic/internal/user"
 	"uptimatic/internal/utils"
 
 	"github.com/getsentry/sentry-go"
@@ -43,17 +42,17 @@ func Start() {
 		utils.Fatal(context.Background(), "Failed to connect minio", map[string]any{"error": err})
 	}
 
-	userRepo := repositories.NewUserRepository()
-	urlRepo := repositories.NewUrlRepository()
-	logRepo := repositories.NewLogRepository()
+	userRepo := user.NewUserRepository()
+	urlRepo := url.NewUrlRepository()
+	logRepo := url.NewLogRepository()
 
-	authService := services.NewAuthService(pgsql, userRepo, redis, jwtUtil, asyncClient, googleClient)
-	urlService := services.NewUrlService(pgsql, urlRepo, logRepo)
-	userService := services.NewUserService(pgsql, userRepo, minio, redis, jwtUtil, asyncClient)
+	authService := auth.NewAuthService(pgsql, userRepo, redis, jwtUtil, asyncClient, googleClient)
+	urlService := url.NewUrlService(pgsql, urlRepo, logRepo)
+	userService := user.NewUserService(pgsql, userRepo, minio, redis, jwtUtil, asyncClient)
 
-	authHandler := handlers.NewAuthHandler(authService, validate, &cfg)
-	urlHandler := handlers.NewURLHandler(urlService, validate)
-	userHandler := handlers.NewUserHandler(userService, validate, &cfg)
+	authHandler := auth.NewAuthHandler(authService, validate, &cfg)
+	urlHandler := url.NewURLHandler(urlService, validate)
+	userHandler := user.NewUserHandler(userService, validate, &cfg)
 
 	if cfg.AppDebug {
 		gin.SetMode(gin.DebugMode)
@@ -63,13 +62,13 @@ func Start() {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
-	r.Use(middlewares.RequestID())
+	r.Use(middleware.RequestID())
 
 	api := r.Group("/api/v1")
 	{
-		routes.AuthRoutes(api, authHandler, &jwtUtil)
-		routes.UserRoutes(api, userHandler, &jwtUtil)
-		routes.UrlRoutes(api, urlHandler, &jwtUtil)
+		auth.AuthRoutes(api, authHandler, &jwtUtil)
+		user.UserRoutes(api, userHandler, &jwtUtil)
+		url.UrlRoutes(api, urlHandler, &jwtUtil)
 	}
 
 	addr := ":" + fmt.Sprint(cfg.AppPort)

@@ -1,11 +1,9 @@
-package handlers
+package auth
 
 import (
 	"fmt"
 	"net/http"
 	"uptimatic/internal/config"
-	"uptimatic/internal/schema"
-	"uptimatic/internal/services"
 	"uptimatic/internal/utils"
 
 	"github.com/gin-gonic/gin"
@@ -27,17 +25,17 @@ type AuthHandler interface {
 }
 
 type authHandler struct {
-	authService services.AuthService
+	authService AuthService
 	validate    *validator.Validate
 	cfg         *config.Config
 }
 
-func NewAuthHandler(authService services.AuthService, validate *validator.Validate, cfg *config.Config) AuthHandler {
+func NewAuthHandler(authService AuthService, validate *validator.Validate, cfg *config.Config) AuthHandler {
 	return &authHandler{authService, validate, cfg}
 }
 
 func (h *authHandler) RegisterHandler(c *gin.Context) {
-	var req schema.RegisterRequest
+	var req RegisterRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
@@ -59,7 +57,7 @@ func (h *authHandler) RegisterHandler(c *gin.Context) {
 }
 
 func (h *authHandler) LoginHandler(c *gin.Context) {
-	var req schema.LoginRequest
+	var req LoginRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
@@ -189,7 +187,7 @@ func (h *authHandler) ResendVerificationEmailTTLHandler(c *gin.Context) {
 }
 
 func (h *authHandler) SendPasswordResetEmailHandler(c *gin.Context) {
-	var req schema.ForgotPasswordRequest
+	var req ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return
@@ -206,7 +204,7 @@ func (h *authHandler) SendPasswordResetEmailHandler(c *gin.Context) {
 }
 
 func (h *authHandler) ResetPasswordHandler(c *gin.Context) {
-	var req schema.ResetPasswordRequest
+	var req ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return

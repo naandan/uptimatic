@@ -1,18 +1,17 @@
-package routes
+package user
 
 import (
-	"uptimatic/internal/handlers"
-	"uptimatic/internal/middlewares"
+	"uptimatic/internal/middleware"
 	"uptimatic/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(r *gin.RouterGroup, h handlers.UserHandler, jwtUtil *utils.JWTUtil) {
+func UserRoutes(r *gin.RouterGroup, h UserHandler, jwtUtil *utils.JWTUtil) {
 	users := r.Group("/users")
-	users.Use(middlewares.AuthMiddleware(jwtUtil))
+	users.Use(middleware.AuthMiddleware(jwtUtil))
 	users.GET("/me", h.GetUserHandler)
-	users.Use(middlewares.VerifiedMiddleware())
+	users.Use(middleware.VerifiedMiddleware())
 	{
 		users.PUT("", h.UpdateUserHandler)
 		users.PUT("/change-password", h.ChangePasswordHandler)

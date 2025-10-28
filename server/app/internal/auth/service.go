@@ -1,4 +1,4 @@
-package services
+package auth
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"uptimatic/internal/email"
-	"uptimatic/internal/google"
+	"uptimatic/internal/adapters/email"
+	"uptimatic/internal/adapters/google"
 	"uptimatic/internal/models"
-	"uptimatic/internal/repositories"
 	"uptimatic/internal/tasks"
+	"uptimatic/internal/user"
 	"uptimatic/internal/utils"
 
 	"github.com/go-redis/redis/v8"
@@ -37,14 +37,14 @@ type AuthService interface {
 
 type authService struct {
 	db          *gorm.DB
-	userRepo    repositories.UserRepository
+	userRepo    user.UserRepository
 	redis       *redis.Client
 	jwtUtil     utils.JWTUtil
 	asyncClient *asynq.Client
 	google      *google.GoogleCLient
 }
 
-func NewAuthService(db *gorm.DB, userRepo repositories.UserRepository, redis *redis.Client, jwtUtil utils.JWTUtil, asyncClient *asynq.Client, google *google.GoogleCLient) AuthService {
+func NewAuthService(db *gorm.DB, userRepo user.UserRepository, redis *redis.Client, jwtUtil utils.JWTUtil, asyncClient *asynq.Client, google *google.GoogleCLient) AuthService {
 	return &authService{db, userRepo, redis, jwtUtil, asyncClient, google}
 }
 

@@ -1,4 +1,4 @@
-package services
+package user
 
 import (
 	"context"
@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
-	"uptimatic/internal/email"
-	"uptimatic/internal/minio"
+	"uptimatic/internal/adapters/email"
+	"uptimatic/internal/adapters/minio"
 	"uptimatic/internal/models"
-	"uptimatic/internal/repositories"
 	"uptimatic/internal/tasks"
 	"uptimatic/internal/utils"
 
@@ -30,14 +29,14 @@ type UserService interface {
 
 type userService struct {
 	db          *gorm.DB
-	userRepo    repositories.UserRepository
+	userRepo    UserRepository
 	minio       *minio.MinioUtil
 	redis       *redis.Client
 	jwtUtil     utils.JWTUtil
 	asyncClient *asynq.Client
 }
 
-func NewUserService(db *gorm.DB, userRepo repositories.UserRepository, minio *minio.MinioUtil, redis *redis.Client, jwtUtil utils.JWTUtil, asyncClient *asynq.Client) UserService {
+func NewUserService(db *gorm.DB, userRepo UserRepository, minio *minio.MinioUtil, redis *redis.Client, jwtUtil utils.JWTUtil, asyncClient *asynq.Client) UserService {
 	return &userService{db, userRepo, minio, redis, jwtUtil, asyncClient}
 }
 
