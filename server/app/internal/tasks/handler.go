@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"uptimatic/internal/adapters/email"
 	"uptimatic/internal/config"
-	"uptimatic/internal/email"
 	"uptimatic/internal/models"
-	"uptimatic/internal/repositories"
+	"uptimatic/internal/url"
 	"uptimatic/internal/utils"
 
 	"github.com/hibiken/asynq"
@@ -23,11 +23,11 @@ type TaskHandler struct {
 	pgsql    *gorm.DB
 	client   *asynq.Client
 	mailTask *email.EmailTask
-	urlRepo  repositories.UrlRepository
-	logRepo  repositories.StatusLogRepository
+	urlRepo  url.UrlRepository
+	logRepo  url.StatusLogRepository
 }
 
-func NewTaskHandler(cfg *config.Config, pgsql *gorm.DB, client *asynq.Client, mailTask *email.EmailTask, urlRepo repositories.UrlRepository, logRepo repositories.StatusLogRepository) *TaskHandler {
+func NewTaskHandler(cfg *config.Config, pgsql *gorm.DB, client *asynq.Client, mailTask *email.EmailTask, urlRepo url.UrlRepository, logRepo url.StatusLogRepository) *TaskHandler {
 	return &TaskHandler{cfg, pgsql, client, mailTask, urlRepo, logRepo}
 }
 

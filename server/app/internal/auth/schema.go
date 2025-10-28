@@ -1,4 +1,4 @@
-package schema
+package auth
 
 type RegisterRequest struct {
 	Name     string `json:"name" validate:"required"`

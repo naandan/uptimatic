@@ -2,7 +2,7 @@ package tasks
 
 import (
 	"encoding/json"
-	"uptimatic/internal/email"
+	"uptimatic/internal/adapters/email"
 
 	"github.com/hibiken/asynq"
 )

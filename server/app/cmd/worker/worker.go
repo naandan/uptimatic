@@ -3,11 +3,11 @@ package worker
 import (
 	"context"
 	"time"
+	"uptimatic/internal/adapters/email"
 	"uptimatic/internal/config"
 	"uptimatic/internal/db"
-	"uptimatic/internal/email"
-	"uptimatic/internal/repositories"
 	"uptimatic/internal/tasks"
+	"uptimatic/internal/url"
 	"uptimatic/internal/utils"
 
 	"github.com/getsentry/sentry-go"
@@ -30,8 +30,8 @@ func Start() {
 	psql := db.NewPostgresClient(&cfg)
 	client := db.NewAsynqClient(&cfg)
 
-	urlRepo := repositories.NewUrlRepository()
-	logRepo := repositories.NewLogRepository()
+	urlRepo := url.NewUrlRepository()
+	logRepo := url.NewLogRepository()
 
 	mailTask, err := email.NewEmailTask(&cfg)
 	if err != nil {

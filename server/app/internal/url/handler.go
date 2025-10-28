@@ -1,10 +1,8 @@
-package handlers
+package url
 
 import (
 	"net/http"
 	"strconv"
-	"uptimatic/internal/schema"
-	"uptimatic/internal/services"
 	"uptimatic/internal/utils"
 
 	"github.com/gin-gonic/gin"
@@ -22,16 +20,16 @@ type URLHandler interface {
 }
 
 type urlHandler struct {
-	urlService services.URLService
+	urlService URLService
 	validate   *validator.Validate
 }
 
-func NewURLHandler(urlService services.URLService, validate *validator.Validate) URLHandler {
+func NewURLHandler(urlService URLService, validate *validator.Validate) URLHandler {
 	return &urlHandler{urlService, validate}
 }
 
 func (h *urlHandler) CreateHandler(c *gin.Context) {
-	var urlRequest schema.UrlRequest
+	var urlRequest UrlRequest
 	if err := c.ShouldBindJSON(&urlRequest); err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return
@@ -59,7 +57,7 @@ func (h *urlHandler) UpdateHandler(c *gin.Context) {
 		return
 	}
 
-	var urlRequest schema.UrlRequest
+	var urlRequest UrlRequest
 	if err := c.ShouldBindJSON(&urlRequest); err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid JSON payload", err))
 		return

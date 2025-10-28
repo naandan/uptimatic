@@ -1,4 +1,4 @@
-package schema
+package url
 
 import (
 	"time"
