@@ -18,7 +18,7 @@ type URLService interface {
 	Delete(ctx context.Context, id uuid.UUID) *utils.AppError
 	FindByID(ctx context.Context, id uuid.UUID) (*UrlResponse, *utils.AppError)
 	ListByUserID(ctx context.Context, userID uint, page, perPage int, active *bool, searchLabel string, sortBy string) ([]UrlResponse, int, *utils.AppError)
-	GetUptimeStats(ctx context.Context, urlID uuid.UUID, mode string, offset int) ([]models.UptimeStat, *utils.AppError)
+	GetUptimeStats(ctx context.Context, urlID uuid.UUID, mode, dateStr string) ([]models.UptimeStat, *utils.AppError)
 }
 
 type urlService struct {
@@ -163,51 +163,75 @@ func (s *urlService) ListByUserID(ctx context.Context, userID uint, page, perPag
 	return responses, count, nil
 }
 
-func (s *urlService) GetUptimeStats(ctx context.Context, urlID uuid.UUID, mode string, offset int) ([]models.UptimeStat, *utils.AppError) {
+func (s *urlService) GetUptimeStats(ctx context.Context, urlID uuid.UUID, mode string, dateStr string) ([]models.UptimeStat, *utils.AppError) {
 	url, err := s.urlRepo.FindByPublicID(ctx, s.db, urlID)
 	if err != nil {
 		utils.Warn(ctx, "URL not found", map[string]any{"url_id": urlID})
 		return nil, utils.NewAppError(http.StatusNotFound, utils.NotFound, "Url not found", err)
 	}
-	utils.Info(ctx, "Fetching uptime stats", map[string]any{"url_id": urlID, "mode": mode, "offset": offset})
 
 	loc, err := time.LoadLocation("Asia/Jakarta")
 	if err != nil {
 		utils.Error(ctx, "Failed to load location", map[string]any{"err": err.Error()})
 		return nil, utils.InternalServerError("Error loading location", err)
 	}
+
+	// Default: pakai tanggal hari ini kalau user tidak kasih parameter
+	var targetDate time.Time
+	if dateStr == "" {
+		targetDate = time.Now().In(loc)
+	} else {
+		targetDate, err = time.ParseInLocation("2006-01-02", dateStr, loc)
+		if err != nil {
+			utils.Warn(ctx, "Invalid date format", map[string]any{"date": dateStr})
+			return nil, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid date format (use YYYY-MM-DD)", err)
+		}
+	}
+
 	var truncUnit string
-	var startLocal, endLocal, start, end time.Time
-	targetDate := time.Now().In(loc)
+	var startLocal, endLocal time.Time
+
 	switch mode {
 	case "day":
 		truncUnit = "hour"
-		targetDate = targetDate.AddDate(0, 0, -offset)
 		startLocal = time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, loc)
 		endLocal = startLocal.Add(24 * time.Hour)
+
 	case "month":
 		truncUnit = "day"
-		targetDate = targetDate.AddDate(0, -offset, 0)
 		startLocal = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, loc)
 		endLocal = startLocal.AddDate(0, 1, 0)
+
+	case "year":
+		truncUnit = "month"
+		startLocal = time.Date(targetDate.Year(), 1, 1, 0, 0, 0, 0, loc)
+		endLocal = startLocal.AddDate(1, 0, 0)
+
 	default:
 		utils.Warn(ctx, "Invalid mode for uptime stats", map[string]any{"mode": mode})
 		return nil, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid mode", nil)
 	}
 
-	start = startLocal.UTC()
-	end = endLocal.UTC()
+	start := startLocal.UTC()
+	end := endLocal.UTC()
+
+	utils.Info(ctx, "Fetching uptime stats", map[string]any{
+		"url_id":      urlID,
+		"mode":        mode,
+		"date":        targetDate.Format("2006-01-02"),
+		"trunc_unit":  truncUnit,
+		"start_local": startLocal,
+		"end_local":   endLocal,
+	})
 
 	stats, err := s.statusLogRepo.GetUptimeStats(ctx, s.db, url.ID, truncUnit, start, end)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.Warn(ctx, "No uptime stats found", map[string]any{"url_id": urlID})
 			return []models.UptimeStat{}, nil
 		}
 		utils.Error(ctx, "Failed to get uptime stats", map[string]any{"url_id": urlID, "err": err.Error()})
 		return nil, utils.InternalServerError("Error getting uptime stats", err)
 	}
 
-	utils.Info(ctx, "Uptime stats fetched successfully", map[string]any{"url_id": urlID, "count": len(stats)})
 	return stats, nil
 }

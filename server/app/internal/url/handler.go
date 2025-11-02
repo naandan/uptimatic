@@ -148,22 +148,21 @@ func (h *urlHandler) ListHandler(c *gin.Context) {
 
 func (h *urlHandler) GetUptimeStats(c *gin.Context) {
 	mode := c.DefaultQuery("mode", "day")
-	offsetStr := c.DefaultQuery("offset", "0")
+	dateStr := c.DefaultQuery("date", "")
 	id := c.Param("id")
 
-	if mode != "day" && mode != "month" {
+	if mode != "day" && mode != "month" && mode != "year" {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, "Invalid mode", nil))
 		return
 	}
 
-	offset, _ := strconv.Atoi(offsetStr)
 	idUUID, err := uuid.Parse(id)
 	if err != nil {
 		utils.ErrorResponse(c, utils.NewAppError(http.StatusBadRequest, utils.ValidationError, err.Error(), err))
 		return
 	}
 
-	stats, errSvc := h.urlService.GetUptimeStats(c.Request.Context(), idUUID, mode, offset)
+	stats, errSvc := h.urlService.GetUptimeStats(c.Request.Context(), idUUID, mode, dateStr)
 	if errSvc != nil {
 		utils.ErrorResponse(c, errSvc)
 		return
