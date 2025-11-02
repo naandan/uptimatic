@@ -1,6 +1,7 @@
 import api from "@/lib/api";
 import { ApiResponse } from "@/types/response";
 import { URLRequest, URLResponse, URLStats } from "@/types/url";
+import { format } from "date-fns";
 
 export const urlService = {
   create: async (
@@ -30,9 +31,12 @@ export const urlService = {
 
   stats: async (
     id: string,
-    mode: "day" | "month",
-    offset: number,
+    mode: "day" | "month" | "year",
+    date: Date,
   ): Promise<ApiResponse<URLStats[]>> => {
-    return await api.get(`/urls/${id}/stats?mode=${mode}&offset=${offset}`);
+    const formattedDate = format(date, "yyyy-MM-dd");
+    return await api.get(
+      `/urls/${id}/stats?mode=${mode}&date=${formattedDate}`,
+    );
   },
 };

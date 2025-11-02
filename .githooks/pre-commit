@@ -32,3 +32,5 @@ fi
 cd ../../
 
 echo "✅ All lint checks passed. Safe to commit."
+
+exit 0
